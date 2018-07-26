@@ -13,10 +13,18 @@ handlers:
     level: ERROR
     formatter: simple
     stream: ext://sys.stderr
+  app_info:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: simple
+    filename: ../logs/application.log
+    maxBytes: 10485760
+    backupCount: 20
+    encoding: utf8
 loggers:
   simpleExample:
     level: DEBUG
-    handlers: [console]
+    handlers: [console, app_info]
     propagate: yes
 root:
   level: DEBUG

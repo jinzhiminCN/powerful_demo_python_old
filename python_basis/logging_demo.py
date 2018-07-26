@@ -94,12 +94,36 @@ def test_yaml_config():
     logger = logging.getLogger('simpleExample')
     logger.debug('debug message')
     logger.info('info message')
+    logger.info('通过yaml文件配置日志')
     logger.warning('warn message')
     logger.error('error message')
     logger.critical('critical message')
+
+
+def test_basicConfig():
+    """
+    配置日志基本信息。
+    :return:
+    """
+    file_name = os.path.join(COMMON_LOG_DIR, LOG_FILE)
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                        datefmt='%m-%d %H:%M',
+                        filename=file_name,
+                        filemode='w')
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+    console.setFormatter(formatter)
+    # add the handler to the root logger
+    logging.getLogger('').addHandler(console)
+
+    logger = logging.getLogger('')
+    logger.info('info message')
 
 
 if __name__ == '__main__':
     pass
     # test_dictConfig()
     test_yaml_config()
+    # test_basicConfig()
