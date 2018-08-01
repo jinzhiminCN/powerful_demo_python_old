@@ -12,3 +12,6 @@ PROJECT_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # config directory
 CONFIG_DIR = os.path.join(PROJECT_DIR, "config")
+
+# resource directory
+RESOURCE_DIR = os.path.join(PROJECT_DIR, "resource")
