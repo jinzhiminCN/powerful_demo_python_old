@@ -58,24 +58,8 @@ def test_image_attribute():
     print("图像尺寸：{0}".format(im.size))
     print("图像拆分：{0}, {1}, {2}, {3}".format(r, g, b, alpha))
 
-    plt.figure()
-    # 原图
-    plt.subplot(3, 2, 1)
-    plt.imshow(im)
-    # r通道
-    plt.subplot(3, 2, 2)
-    plt.imshow(r)
-    # g通道
-    plt.subplot(3, 2, 3)
-    plt.imshow(g)
-    # b通道
-    plt.subplot(3, 2, 4)
-    plt.imshow(b)
-    # a通道
-    plt.subplot(3, 2, 5)
-    plt.imshow(alpha)
-    # 显示
-    plt.show()
+    images = [im, r, g, b, alpha]
+    plt_images(images, 2)
 
 
 def test_image_blend():
@@ -99,24 +83,8 @@ def test_image_blend():
     image_blend = Image.blend(image1, image2, alpha)
     # image_blend.show()
 
-    plt.figure()
-    # 原图1
-    plt.subplot(3, 2, 1)
-    plt.imshow(image1)
-    # 原图1—alpha
-    plt.subplot(3, 2, 2)
-    plt.imshow(image1_alpha)
-    # 原图2
-    plt.subplot(3, 2, 3)
-    plt.imshow(image2)
-    # 原图2-alpha
-    plt.subplot(3, 2, 4)
-    plt.imshow(image2_alpha)
-    # 融合图片
-    plt.subplot(3, 2, 5)
-    plt.imshow(image_blend)
-    # 显示
-    plt.show()
+    images = [image1, image1_alpha, image2, image2_alpha, image_blend]
+    plt_images(images, 2)
 
 
 def test_image_composite():
@@ -143,8 +111,50 @@ def test_image_composite():
     image3 = image3.convert("RGBA")
     image3 = image3.resize(size)
 
-    image_composite = Image.composite(image1, image2, image3)
+    im_r, im_g, im_b, im_alpha = image1.split()
+    print("im_g mode:{0}".format(im_g.mode))
+
+    image_composite = Image.composite(image1, image3, im_g)
     image_composite.show()
+
+    images = [image1, image2, image3, image_composite, im_g]
+    plt_images(images, 2)
+
+
+def test_image_merge():
+    """
+    测试图像方法merge。
+    使用一些单通道图像，创建一个新的图像。变量bands为一个图像的元组或者列表，每个通道的模式由变量mode描述。
+    所有通道必须有相同的尺寸。
+    :return:
+    """
+    width, height = 500, 500
+    size = (width, height)
+    image_file1 = os.path.join(image_dir, "demo1.png")
+    image1 = Image.open(image_file1)
+    image1 = image1.convert("RGBA")
+    image1 = image1.resize(size)
+    r1, g1, b1, alpha1 = image1.split()
+
+    image_file2 = os.path.join(image_dir, "753322530.jpg")
+    image2 = Image.open(image_file2)
+    image2 = image2.convert("RGBA")
+    image2 = image2.resize(size)
+    r2, g2, b2, alpha2 = image2.split()
+
+    image_file3 = os.path.join(image_dir, "2254599360.jpg")
+    image3 = Image.open(image_file3)
+    image3 = image3.convert("RGBA")
+    image3 = image3.resize(size)
+    r3, g3, b3, alpha3 = image3.split()
+
+    image_bands = [r1, g2, b3, alpha3]
+
+    image_merge = Image.merge("RGBA", image_bands)
+    image_merge.show()
+
+    images = [image1, image2, image3, r1, g2, b3, alpha3, image_merge]
+    plt_images(images, 3)
 
 
 def print_image_pixel(image):
@@ -163,9 +173,9 @@ def print_image_pixel(image):
 
 def adjust_image_alpha(image, alpha):
     """
-    调整图像的alpha值。
+    调整图像的alpha值，原始值乘以alpha。
     :param image: 原始图像
-    :param alpha:
+    :param alpha: 透明度alpha值
     :return:
     """
     image = image.convert('RGBA')
@@ -183,11 +193,59 @@ def adjust_image_alpha(image, alpha):
     return image
 
 
+def plt_images(images, line_size=2):
+    """
+    使用plt显示图片。
+    :param images: list列表形式的image
+    :param line_size: 每行显示数量
+    :return:
+    """
+    line_num = len(images)//line_size
+    line_num += 1
+
+    plt.figure()
+    for i in range(0, len(images)):
+        plt.subplot(line_num, line_size, i+1)
+        plt.imshow(images[i])
+    plt.show()
+
+
+def test_image_eval():
+    """
+    Image.eval(image,function) ⇒ image
+    使用变量function对应的函数（该函数应该有一个参数）处理变量image所代表图像中的每一个像素点。
+    如果变量image所代表图像有多个通道，那变量function对应的函数作用于每一个通道。
+    注意：变量function对每个像素只处理一次，所以不能使用随机组件和其他生成器。
+    :return:
+    """
+    image_file1 = os.path.join(image_dir, "demo1.png")
+    image1 = Image.open(image_file1)
+    print("png mode:{0}".format(image1.mode))
+
+    image2 = Image.eval(image1, image_fun)
+
+    images = [image1, image2]
+    plt_images(images)
+
+
+def image_fun(pixel):
+    """
+    操作每个像素值。
+    :param pixel
+    :return:
+    """
+    # print(pixel)
+    return pixel*0.5
+
+
 if __name__ == "__main__":
     pass
     # test_open_image()
     # test_new_image()
     # test_image_attribute()
     # test_image_blend()
-    test_image_composite()
+    # test_image_composite()
+    # test_image_eval()
+    # test_image_merge()
+
 

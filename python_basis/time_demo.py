@@ -175,7 +175,7 @@ def test_time_zone():
 
 def str_to_struct_time(time_str, time_format='%Y-%m-%d %H:%M:%S'):
     """
-    时间字符串转换为struct_time格式
+    时间字符串转换为struct_time格式。
     :param time_str: 时间字符串
     :param time_format: 时间格式
     :return:
@@ -186,7 +186,7 @@ def str_to_struct_time(time_str, time_format='%Y-%m-%d %H:%M:%S'):
 
 def str_to_time_stamp(time_str, time_format='%Y-%m-%d %H:%M:%S'):
     """
-    时间字符串转换为时间戳
+    时间字符串转换为时间戳。
     :param time_str: 时间字符串
     :param time_format: 时间格式
     :return:
@@ -197,7 +197,7 @@ def str_to_time_stamp(time_str, time_format='%Y-%m-%d %H:%M:%S'):
 
 def time_stamp_to_str(time_stamp, time_format='%Y-%m-%d %H:%M:%S'):
     """
-    时间字符串转换为时间戳
+    时间字符串转换为时间戳。
     :param time_stamp: 时间字符串
     :param time_format: 时间格式
     :return:
