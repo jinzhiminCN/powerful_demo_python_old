@@ -194,8 +194,8 @@ def uniform(ustring):
 
 if __name__ == "__main__":
     pass
-    # test_encode_decode()
+    test_encode_decode()
     # print(change_to_unicode("ABC --- 哲学"))
-    test_unicode()
+    # test_unicode()
 
 
