@@ -23,7 +23,9 @@ def test_open_image():
     打开图片并显示。
     :return:
     """
-    image_file = os.path.join(image_dir, "demo1.png")
+    file_name = "china_mobile.tif"
+    # file_name = "demo1.png"
+    image_file = os.path.join(image_dir, file_name)
     image = Image.open(image_file)
     # print_image_pixel(image)
     image.show()
@@ -240,7 +242,7 @@ def image_fun(pixel):
 
 if __name__ == "__main__":
     pass
-    # test_open_image()
+    test_open_image()
     # test_new_image()
     # test_image_attribute()
     # test_image_blend()

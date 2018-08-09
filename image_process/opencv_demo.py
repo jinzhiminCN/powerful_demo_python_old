@@ -6,6 +6,7 @@
 import cv2
 import numpy as np
 import os
+from image_process import pil_image_demo
 import config.common_config as com_config
 
 
@@ -15,7 +16,7 @@ image_dir = os.path.join(resource_dir, "image_data")
 # =========================== test function ===========================
 
 
-def show_image():
+def test_show_image():
     """
     读取、显示以及保存图片。
     :return:
@@ -68,15 +69,88 @@ def plot_images():
     font = cv2.FONT_HERSHEY_SIMPLEX
     cv2.putText(img, 'OpenCV', (10, 500), font, 4, (255, 255, 255), 2)
 
+    show_image(img)
+
+
+def show_image(img):
+    """
+    显示图像。
+    :param img:
+    :return:
+    """
     win_name = 'example'
     cv2.namedWindow(win_name)
     cv2.imshow(win_name, img)
 
     cv2.waitKey(0)
-    cv2.destroyAllWindows(win_name)
+    cv2.destroyAllWindows()
+
+
+def convert_image_color():
+    """
+    图像颜色转换。
+    :return:
+    """
+    image_file1 = os.path.join(image_dir, "demo1.png")
+    image1 = cv2.imread(image_file1)
+    image_cvt1 = cv2.cvtColor(image1, cv2.COLOR_BGR2HSV)
+    image_cvt2 = cv2.cvtColor(image1, cv2.COLOR_RGB2HSV)
+    image_cvt3 = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
+    image_cvt4 = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    image_cvt5 = cv2.cvtColor(image_cvt3, cv2.COLOR_RGB2GRAY)
+
+    images = [image1, image_cvt1, image_cvt2, image_cvt3, image_cvt4, image_cvt5]
+    pil_image_demo.plt_images(images)
+
+
+def test_image_resize():
+    """
+    测试图像缩放。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image = cv2.imread(image_file)
+    print("图像的类型：{0}".format(type(image)))
+    print("size {0}, shape {1}".format(image_file, image.size, image.shape))
+
+    # 图像缩放
+    img_resize1 = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    print("size {0}, shape {1}".format(img_resize1.size, img_resize1.shape))
+    show_image(img_resize1)
+
+    img_resize2 = cv2.resize(image, (300, 200), interpolation=cv2.INTER_AREA)
+    print("size {0}, shape {1}".format(img_resize2.size, img_resize2.shape))
+    show_image(img_resize2)
+
+
+def test_image_rotate():
+    """
+    测试图像旋转。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+
+    # 图像读取模式
+    iread_mode = cv2.IMREAD_ANYCOLOR
+    img = cv2.imread(image_file, iread_mode)
+
+    # 按读取模式收集结果
+    if iread_mode == cv2.IMREAD_COLOR or iread_mode == cv2.IMREAD_ANYCOLOR:
+        rows, cols, colors = img.shape
+    else:
+        rows, cols = img.shape
+
+    # 计算旋转仿射矩阵
+    matrix = cv2.getRotationMatrix2D((cols / 2, rows / 2), 45, 0.6)
+    # 执行变形仿射
+    img_rotate = cv2.warpAffine(img, matrix, (1 * cols, 1 * rows))
+    show_image(img_rotate)
 
 
 if __name__ == "__main__":
     # show_image()
-    plot_images()
+    # plot_images()
+    # convert_image_color()
+    # test_image_resize()
+    test_image_rotate()
     pass
