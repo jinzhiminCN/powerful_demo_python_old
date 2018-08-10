@@ -6,6 +6,7 @@
 import cv2
 import numpy as np
 import os
+import time
 from image_process import pil_image_demo
 import config.common_config as com_config
 
@@ -13,7 +14,7 @@ import config.common_config as com_config
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
 
-# =========================== function ===========================
+# ===========================       function ===========================
 
 
 def test_show_image():
@@ -236,6 +237,56 @@ def test_image_trans():
     pil_image_demo.plt_images(images)
 
 
+def test_video_capture():
+    """
+    测试视频捕获。
+    :return:
+    """
+    interval = 60  # 捕获图像的间隔，单位：秒
+    num_frames = 100  # 捕获图像的总帧数
+    out_fps = 24  # 输出文件的帧率
+
+    # VideoCapture(0)表示打开默认的相机
+    cap = cv2.VideoCapture(0)
+
+    # 获取捕获的分辨率
+    cap_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
+            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+
+    file_path = os.path.join(com_config.RESOURCE_DIR, "my_video.avi")
+
+    # 设置要保存视频的编码，分辨率和帧率
+    video = cv2.VideoWriter(
+        file_path,
+        cv2.VideoWriter_fourcc('M', 'P', '4', '2'),
+        out_fps,
+        cap_size
+    )
+
+    # 对于一些低画质的摄像头，前面的帧可能不稳定，略过
+    for i in range(42):
+        cap.read()
+
+    # 开始捕获，通过read()函数获取捕获的帧
+    try:
+        for i in range(num_frames):
+            _, frame = cap.read()
+            video.write(frame)
+
+            # 如果希望把每一帧也存成文件，比如制作GIF，则取消下面的注释
+            # filename = '{:0>6d}.png'.format(i)
+            # cv2.imwrite(filename, frame)
+            # 显示捕获到的图像
+            # cv2.imshow('frame', frame)
+            print('Frame {} is captured.'.format(i))
+            # time.sleep(interval)
+    except KeyboardInterrupt:
+        # 提前停止捕获
+        print('Stopped! {}/{} frames captured!'.format(i, num_frames))
+
+    # 释放资源并写入视频文件
+    video.release()
+    cap.release()
 
 
 
@@ -247,6 +298,7 @@ if __name__ == "__main__":
     # test_image_rotate()
     # test_image_flip()
     # test_image_cut_makeborder()
-    test_image_trans()
+    # test_image_trans()
+    test_video_capture()
     pass
 
