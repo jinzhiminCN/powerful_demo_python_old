@@ -123,9 +123,25 @@ def test_image_resize():
     show_image(img_resize2)
 
 
+def test_image_cut_makeborder():
+    """
+    图像裁剪和补边，裁剪是利用array自身的下标截取实现，此外OpenCV还可以给图像补边。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    img = cv2.imread(image_file)
+
+    img_cut = img[30:180, 40:150]
+    img_border = cv2.copyMakeBorder(img, 10, 10, 0, 0, cv2.BORDER_CONSTANT, value=(0, 0, 0))
+
+    show_image(img_cut)
+    show_image(img_border)
+
+
 def test_image_rotate():
     """
     测试图像旋转。
+    在OpenCV中，仿射变换的矩阵是一个2×3的矩阵，其中左边的2×2子矩阵是线性变换矩阵，右边的2×1的两项是平移项。
     :return:
     """
     image_file = os.path.join(image_dir, "demo1.png")
@@ -142,9 +158,85 @@ def test_image_rotate():
 
     # 计算旋转仿射矩阵
     matrix = cv2.getRotationMatrix2D((cols / 2, rows / 2), 45, 0.6)
-    # 执行变形仿射
+    # 执行仿射变形
     img_rotate = cv2.warpAffine(img, matrix, (1 * cols, 1 * rows))
     show_image(img_rotate)
+
+
+def test_image_flip():
+    """
+    翻转图像。
+    使用函数cv2.flip(img,flipcode)翻转图像，flipcode控制翻转效果。
+    flipcode = 0：沿x轴翻转
+    flipcode > 0：沿y轴翻转
+    flipcode < 0：x,y轴同时翻转
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    img = cv2.imread(image_file)
+
+    img_copy = img.copy()
+    img_flip1 = cv2.flip(img, 0)
+    img_flip2 = cv2.flip(img, 1)
+    img_flip3 = cv2.flip(img, -1)
+
+    images = [img_copy, img_flip1, img_flip2, img_flip3]
+    pil_image_demo.plt_images(images)
+
+
+# 定义Gamma矫正的函数
+def gamma_trans(img, gamma):
+    # 具体做法是先归一化到1，然后gamma作为指数值求出新的像素值再还原
+    gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]
+    gamma_table = np.round(np.array(gamma_table)).astype(np.uint8)
+
+    # 实现这个映射用的是OpenCV的查表函数
+    return cv2.LUT(img, gamma_table)
+
+
+def test_image_trans():
+    """
+    测试图像变换
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    img = cv2.imread(image_file)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    height, width, dim = img.shape
+    # 执行Gamma矫正，小于1的值让暗部细节大量提升，同时亮部细节少量提升
+    img_gamma = gamma_trans(img, 0.5)
+
+    # 沿着横纵轴放大1.6倍，然后平移(-150,-240)，最后沿原图大小截取，等效于裁剪并放大
+    m_crop = np.array([
+        [1.6, 0, -150],
+        [0, 1.6, -240]
+    ], dtype=np.float32)
+
+    img_crop = cv2.warpAffine(img, m_crop, (width, height))
+
+    # x轴的剪切变换，角度15°
+    theta = 15 * np.pi / 180
+    m_shear = np.array([
+        [1, np.tan(theta), 0],
+        [0, 1, 0]
+    ], dtype=np.float32)
+
+    img_sheared = cv2.warpAffine(img, m_shear, (width, height))
+
+    # 顺时针旋转，角度15°
+    m_rotate = np.array([
+        [np.cos(theta), -np.sin(theta), 0],
+        [np.sin(theta), np.cos(theta), 0]
+    ], dtype=np.float32)
+
+    img_rotated = cv2.warpAffine(img, m_rotate, (width, height))
+
+    # show images
+    images = [img, img_gamma, img_crop, img_sheared, img_rotated]
+    pil_image_demo.plt_images(images)
+
+
+
 
 
 if __name__ == "__main__":
@@ -152,5 +244,9 @@ if __name__ == "__main__":
     # plot_images()
     # convert_image_color()
     # test_image_resize()
-    test_image_rotate()
+    # test_image_rotate()
+    # test_image_flip()
+    # test_image_cut_makeborder()
+    test_image_trans()
     pass
+
