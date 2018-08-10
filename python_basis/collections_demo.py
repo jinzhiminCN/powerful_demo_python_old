@@ -10,7 +10,7 @@ from collections import namedtuple, deque, defaultdict, OrderedDict, Counter
 # =========================== 全局常量 ===========================
 default_time_format = '%Y-%m-%d %H:%M:%S'
 
-# =========================== test function ===========================
+# =========================== function ===========================
 
 
 def test_namedtuple():

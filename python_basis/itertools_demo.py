@@ -8,7 +8,7 @@ import itertools
 import sys
 import operator
 
-# =========================== test function ===========================
+# =========================== function ===========================
 
 
 def show_result(description, result):

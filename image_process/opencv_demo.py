@@ -13,7 +13,7 @@ import config.common_config as com_config
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
 
-# =========================== test function ===========================
+# =========================== function ===========================
 
 
 def test_show_image():

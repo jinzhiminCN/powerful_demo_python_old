@@ -73,7 +73,7 @@ def is_chinese(uchar):
     :param uchar:
     :return:
     """
-    x = ord (uchar)
+    x = ord(uchar)
     # Punct & Radicals
     if 0x2e80 <= x <= 0x33ff:
         return True

@@ -9,7 +9,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 
-# =========================== test function ===========================
+# =========================== function ===========================
 
 
 def test_plot_line_figure():
@@ -115,7 +115,7 @@ def test_figure_legend():
     ax.legend(loc=2)  # upper left corner
     ax.set_xlabel(r'$\alpha$', fontsize=18)
     ax.set_ylabel(r'$y$', fontsize=18)
-    ax.set_title('title');
+    ax.set_title('title')
 
     plt.show()
 
@@ -159,7 +159,7 @@ def test_logarithmic_scale():
 
     axes[1].plot(x, x ** 2, x, np.exp(x))
     axes[1].set_yscale("log")
-    axes[1].set_title("Logarithmic scale (y)");
+    axes[1].set_title("Logarithmic scale (y)")
 
     plt.show()
 
@@ -180,7 +180,7 @@ def test_figure_xyticks():
 
     yticks = [0, 50, 100, 150]
     ax.set_yticks(yticks)
-    ax.set_yticklabels(["$%.1f$" % y for y in yticks], fontsize=18);  # use LaTeX formatted labels
+    ax.set_yticklabels(["$%.1f$" % y for y in yticks], fontsize=18)  # use LaTeX formatted labels
 
     plt.show()
 
@@ -210,8 +210,6 @@ def test_figure_spines():
     改变轴的属性。
     :return:
     """
-    x = np.linspace(0, 5, 10)
-
     fig, ax = plt.subplots(figsize=(6, 2))
 
     ax.spines['bottom'].set_color('blue')
@@ -255,7 +253,7 @@ def test_other_figure():
     :return:
     """
     n = np.array([0, 1, 2, 3, 4, 5])
-    xx = np.linspace(-1.5, 2, 0.5)
+    xx = np.linspace(-1.5, 2, num=7)
     x = np.linspace(0, 5)
 
     fig, axes = plt.subplots(2, 4, figsize=(12, 6))
@@ -325,7 +323,7 @@ if __name__ == "__main__":
     # test_figure_grid()
     # test_figure_spines()
     # test_figure_origin_point()
-    # test_other_figure()
+    test_other_figure()
     # test_polar_axis()
-    test_subplot2grid()
+    # test_subplot2grid()
 
