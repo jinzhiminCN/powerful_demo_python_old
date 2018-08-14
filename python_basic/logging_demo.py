@@ -8,12 +8,13 @@ import os
 import datetime
 import logging
 import logging.config
-import config.common_config as com_config
 import yaml
+import config.common_config as com_config
+from config.common_config import COMMON_LOG_DIR
+
 
 # =========================== 全局变量 ===========================
 # common log directory
-COMMON_LOG_DIR = os.path.join(com_config.PROJECT_DIR, 'logs')
 
 # 创建目录路径
 if not os.path.exists(COMMON_LOG_DIR):
