@@ -240,9 +240,22 @@ def image_fun(pixel):
     return pixel*0.5
 
 
+def convert_gray():
+    """
+    转换为灰度图。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image = Image.open(image_file)
+    image_gray = image.convert("L")
+    image_gray.show()
+
+
+
 if __name__ == "__main__":
     pass
-    test_open_image()
+    # test_open_image()
+    convert_gray()
     # test_new_image()
     # test_image_attribute()
     # test_image_blend()
