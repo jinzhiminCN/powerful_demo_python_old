@@ -103,7 +103,7 @@ def func_3(name, *args, **kwargs):
 
 
 @decorate_with_name
-def func_4(name="some_name", *args, **kwargs):
+def func_4(name, *args, **kwargs):
     print(name, args, kwargs)
 
 
@@ -126,13 +126,13 @@ def test_decorate():
     # print("----------装饰器函数----------")
     # func_2('x', 'y', para1='1', para2='2')
     # func_3('x', 'y', para1='1', para2='2')
-    # func_4('x', 'y', para1='1', para2='2')
-    func_4(nn='x', para1='1', para2='2')
+    func_4('x', 'y', para1='1', para2='2')
+    # func_4(nn='x', para1='1', para2='2')
+    # func_4(name='x', para1='1', para2='2')
     # func_5(nn='x', para1='1', para2='2')
     # func_5('x2', name2='x', para1='1', para2='2')
     # func_add()
     # print(func_add())
-    # func_4(name='x', para1='1', para2='2')
 
 
 if __name__ == "__main__":
