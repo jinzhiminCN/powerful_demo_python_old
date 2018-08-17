@@ -14,7 +14,7 @@ import config.common_config as com_config
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
 
-# ===========================       function ===========================
+# =========================== function ===========================
 
 
 def test_show_image():
@@ -185,8 +185,13 @@ def test_image_flip():
     pil_image_demo.plt_images(images)
 
 
-# 定义Gamma矫正的函数
 def gamma_trans(img, gamma):
+    """
+    定义Gamma矫正的函数。
+    :param img:
+    :param gamma:
+    :return:
+    """
     # 具体做法是先归一化到1，然后gamma作为指数值求出新的像素值再还原
     gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]
     gamma_table = np.round(np.array(gamma_table)).astype(np.uint8)
@@ -251,7 +256,7 @@ def test_video_capture():
 
     # 获取捕获的分辨率
     cap_size = (int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)),
-            int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+                int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)))
 
     file_path = os.path.join(com_config.RESOURCE_DIR, "my_video.avi")
 

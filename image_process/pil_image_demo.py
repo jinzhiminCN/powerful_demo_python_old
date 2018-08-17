@@ -240,7 +240,7 @@ def image_fun(pixel):
     return pixel*0.5
 
 
-def convert_gray():
+def test_convert_gray():
     """
     转换为灰度图。
     :return:
@@ -248,14 +248,16 @@ def convert_gray():
     image_file = os.path.join(image_dir, "demo1.png")
     image = Image.open(image_file)
     image_gray = image.convert("L")
-    image_gray.show()
+    image_binary = image.convert("1")
+    image_cmyk = image.convert("CMYK")
 
-
+    images = [image, image_cmyk, image_gray, image_binary]
+    plt_images(images)
 
 if __name__ == "__main__":
     pass
     # test_open_image()
-    convert_gray()
+    test_convert_gray()
     # test_new_image()
     # test_image_attribute()
     # test_image_blend()
