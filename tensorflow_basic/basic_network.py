@@ -36,7 +36,7 @@ class BasicDNN(object):
         self.output_dim = output_dim
 
         # 训练需要的超参数
-        self.learning_rate = 0.1
+        self.learning_rate = 1e-5
         self.training_epochs = 10
         self.batch_size = 100
         self.display_steps = 1
@@ -76,7 +76,6 @@ class BasicDNN(object):
         初始化网络结构信息。
         :return:
         """
-        self.super_parameters()
         self.placeholders()
         self.variables()
         self.inference()
@@ -113,17 +112,6 @@ class BasicDNN(object):
         self.weight = tf.Variable(tf.zeros([self.input_dim, self.output_dim]), name='Weights')
         # 偏置变量
         self.bias = tf.Variable(tf.zeros([self.output_dim]), name='Bias')
-
-    def super_parameters(self):
-        """
-        设置超参数。
-        :return:
-        """
-        self.learning_rate = 1e-5
-        self.training_epochs = 10
-        self.batch_size = 100
-        self.display_steps = 1
-        self.save_steps = 1
 
     def init_variables(self):
         """

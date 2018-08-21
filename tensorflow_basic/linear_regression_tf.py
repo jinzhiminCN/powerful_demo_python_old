@@ -36,11 +36,11 @@ class LinearRegressionTF(object):
         self.y_data = y_data
 
         # 训练需要的超参数
-        self.learning_rate = 0.1
+        self.learning_rate = 1e-3
         self.training_epochs = 2000
-        self.batch_size = 100
-        self.display_steps = 1
-        self.save_steps = 1
+        self.batch_size = 1
+        self.display_steps = 50
+        self.save_steps = 100
 
         # 预测优化函数
         self.y_value = None
@@ -74,7 +74,6 @@ class LinearRegressionTF(object):
         初始化网络结构信息。
         :return:
         """
-        self.super_parameters()
         self.placeholders()
         self.variables()
         self.inference()
@@ -108,24 +107,16 @@ class LinearRegressionTF(object):
         :return:
         """
         # 权重变量
+        # 1. 权重初始化为0
         # self.weight = tf.Variable(tf.zeros([self.input_dim, 1]), name='Weights')
+        # 2. 权重初始化为随机值
         self.weight = tf.Variable(tf.random_uniform([self.input_dim, 1], -1.0, 1.0), name='Weights')
-        # 偏置变量
-        # 偏置初始化为0
-        self.bias = tf.Variable(tf.zeros([1]), name='Bias')
-        # 偏置初始化为随机值
-        # self.bias = tf.Variable(np.random.randn(), name='Bias')
 
-    def super_parameters(self):
-        """
-        设置超参数。
-        :return:
-        """
-        self.learning_rate = 1e-3
-        self.training_epochs = 2000
-        self.batch_size = 1
-        self.display_steps = 50
-        self.save_steps = 100
+        # 偏置变量
+        # 1. 偏置初始化为0
+        self.bias = tf.Variable(tf.zeros([1]), name='Bias')
+        # 2. 偏置初始化为随机值
+        # self.bias = tf.Variable(np.random.randn(), name='Bias')
 
     def init_variables(self):
         """
@@ -149,8 +140,9 @@ class LinearRegressionTF(object):
         """
         n_samples = len(self.x_data)
         # self.loss = tf.reduce_sum(tf.pow(self.y_input - self.y_value, 2)) / (2 * n_samples)
-        # 1. 差平方求和
+        # 1. 差平方求和除以2倍样本数，配合学习率1e-2
         # self.loss = tf.reduce_mean(tf.square(self.y_input - self.y_value)) / (2 * n_samples)
+        # 2. 差平方求和，配合学习率1e-3
         self.loss = tf.reduce_mean(tf.square(self.y_input - self.y_value))
 
     def evaluate_function(self):
