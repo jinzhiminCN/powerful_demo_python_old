@@ -294,6 +294,33 @@ def test_video_capture():
     cap.release()
 
 
+def test_canny_edge():
+    """
+    canny边缘检测。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    img = cv2.imread(image_file)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+    # 高斯模糊,降低噪声
+    blurred = cv2.GaussianBlur(img, (3, 3), 0)
+    # 灰度图像
+    gray = cv2.cvtColor(blurred, cv2.COLOR_RGB2GRAY)
+    # 图像梯度
+    x_grad = cv2.Sobel(gray, cv2.CV_16SC1, 1, 0)
+    y_grad = cv2.Sobel(gray, cv2.CV_16SC1, 0, 1)
+    # 计算边缘
+    # 50和150参数必须符合1：3或者1：2
+    edge_output = cv2.Canny(x_grad, y_grad, 50, 150)
+    cv2.imshow("edge", edge_output)
+
+    dst = cv2.bitwise_and(img, img, mask=edge_output)
+    cv2.imshow('cedge', dst)
+
+    images = [img, blurred, gray, edge_output, dst]
+    pil_image_demo.plt_images(images)
+
 
 if __name__ == "__main__":
     # show_image()
@@ -304,6 +331,7 @@ if __name__ == "__main__":
     # test_image_flip()
     # test_image_cut_makeborder()
     # test_image_trans()
-    test_video_capture()
+    # test_video_capture()
+    test_canny_edge()
     pass
 
