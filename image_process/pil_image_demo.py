@@ -23,12 +23,15 @@ def test_open_image():
     打开图片并显示。
     :return:
     """
-    file_name = "china_mobile.tif"
+    # file_name = "china_mobile.tif"
+    file_name = "lena_gray.jpg"
     # file_name = "demo1.png"
     image_file = os.path.join(image_dir, file_name)
     image = Image.open(image_file)
     # print_image_pixel(image)
     image.show()
+    print_image_attribute(image)
+    print_image_pixel(image)
 
 
 def test_new_image():
@@ -62,6 +65,18 @@ def test_image_attribute():
 
     images = [im, r, g, b, alpha]
     plt_images(images, 2)
+
+
+def print_image_attribute(image):
+    """
+    显示图像的属性。
+    :param image:
+    :return:
+    """
+    bands = image.getbands()
+    print("图像通道：{0}".format(bands))
+    print("图像模式：{0}".format(image.mode))
+    print("图像尺寸：{0}".format(image.size))
 
 
 def test_image_blend():
@@ -169,7 +184,8 @@ def print_image_pixel(image):
     for h in range(0, height):
         for w in range(0, width):
             pixel = image.getpixel((w,h))
-            print("{}".format(pixel), end=" ")
+            if isinstance(pixel, (int, float)):
+                print("{0: >3}".format(pixel), end=" ")
         print("")
 
 
@@ -195,11 +211,12 @@ def adjust_image_alpha(image, alpha):
     return image
 
 
-def plt_images(images, line_size=2):
+def plt_images(images, line_size=2, interpolation=None):
     """
     使用plt显示图片。
     :param images: list列表形式的image
     :param line_size: 每行显示数量
+    :param interpolation: 插值算法
     :return:
     """
     line_num = len(images)//line_size
@@ -208,7 +225,9 @@ def plt_images(images, line_size=2):
     plt.figure()
     for i in range(0, len(images)):
         plt.subplot(line_num, line_size, i+1)
-        plt.imshow(images[i])
+        plt.imshow(images[i], interpolation=interpolation)
+        plt.axis('off')
+    plt.subplots_adjust(wspace=0, hspace=0.02, top=0.99, bottom=0.01, left=0.01, right=0.99)
     plt.show()
 
 
@@ -256,8 +275,8 @@ def test_convert_gray():
 
 if __name__ == "__main__":
     pass
-    # test_open_image()
-    test_convert_gray()
+    test_open_image()
+    # test_convert_gray()
     # test_new_image()
     # test_image_attribute()
     # test_image_blend()

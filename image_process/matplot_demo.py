@@ -8,6 +8,7 @@ import random
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+from image_process import pil_image_demo
 
 # =========================== function ===========================
 
@@ -316,6 +317,22 @@ def test_subplot2grid():
     plt.show()
 
 
+def plt_image_test():
+    """
+    显示图像。
+    :return:
+    """
+    im_nums = np.arange(8)
+    im = np.zeros([8, 8])
+    images = []
+
+    for im_num in im_nums:
+        im = im.copy()
+        im[im_num, im_num] = im_num
+        images.append(im)
+    pil_image_demo.plt_images(images, 3, interpolation='nearest')
+
+
 if __name__ == "__main__":
     pass
     # test_figure_xyticks()
@@ -323,7 +340,8 @@ if __name__ == "__main__":
     # test_figure_grid()
     # test_figure_spines()
     # test_figure_origin_point()
-    test_other_figure()
+    # test_other_figure()
     # test_polar_axis()
     # test_subplot2grid()
+    plt_image_test()
 
