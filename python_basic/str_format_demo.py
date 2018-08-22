@@ -41,6 +41,7 @@ def str_format_test():
 
     # Using the comma as a thousands separator
     print('{:,}'.format(1234567890))
+    print('{:,.2f}'.format(1234567890.01))
 
     # Replacing %x and %o and converting the value to different bases
     print("int: {0:d};  hex: {0:x};  oct: {0:o};  bin: {0:b}".format(42))
@@ -87,5 +88,5 @@ def output_format_test():
 
 if __name__ == "__main__":
     pass
-    # str_format_test()
-    output_format_test()
+    str_format_test()
+    # output_format_test()
