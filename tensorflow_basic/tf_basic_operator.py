@@ -121,10 +121,55 @@ def test_run_sess(desc, tf_op):
         common_logger.info("{0}:{1}".format(desc, result))
 
 
+def test_nn_conv2d():
+    """
+    测试nn.conv2d二位卷积操作。
+    :return:
+    """
+    # 构造输入数据
+    v_list = [i for i in range(25)]
+    v_const = tf.constant(v_list)
+    v_const = tf.cast(v_const, "float32")
+    v_image = tf.reshape(v_const, shape=[-1, 5, 5, 1])
+
+    # 构造权重和卷积核
+    v_weight = tf.constant([1, 1, 1, 1])
+    v_weight = tf.cast(v_weight, "float32")
+    w_filter = tf.reshape(v_weight, shape=[2, 2, 1, 1])
+
+    # 卷积运算
+    v_conv1 = tf.nn.conv2d(v_image, filter=w_filter, strides=[1, 1, 1, 1], padding="VALID")
+
+    with tf.Session() as sess:
+        kernel = sess.run(w_filter)
+        result_shape = sess.run(tf.shape(v_conv1))
+        result_conv = sess.run(v_conv1)
+        common_logger.info("kernel:{0}".format(kernel))
+        common_logger.info("shape:{0}".format(result_shape))
+        common_logger.info("value:{0}".format(result_conv))
+
+    # 修改权重和卷积核
+    v_shape = [2, 2, 1, 2]
+    v_weight = tf.truncated_normal(v_shape, mean=1, stddev=0)
+    v_weight = tf.cast(v_weight, "float32")
+
+    # 卷积运算
+    v_conv2 = tf.nn.conv2d(v_image, filter=v_weight, strides=[1, 1, 1, 1], padding="VALID")
+
+    with tf.Session() as sess:
+        kernel = sess.run(v_weight)
+        result_shape = sess.run(tf.shape(v_conv2))
+        result_conv = sess.run(v_conv2)
+        common_logger.info("kernel:{0}".format(kernel))
+        common_logger.info("shape:{0}".format(result_shape))
+        common_logger.info("value:{0}".format(result_conv))
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
     # test_truncate_norm()
-    test_concat()
+    # test_concat()
+    test_nn_conv2d()
     pass
 
