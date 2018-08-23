@@ -134,14 +134,6 @@ def bin2gray(x):
         return x * 255
 
 
-def num2gray(x, ratio=255):
-    """
-
-    :param x:
-    :return:
-    """
-
-
 def test_morphology():
     """
     测试图像的数学形态学。
@@ -338,6 +330,49 @@ def test_histogram():
     plt.show()
 
 
+def test_measurement():
+    """
+    测试测量对象属性。
+    :return:
+    """
+    # 合成图像
+    n = 10
+    length = 256
+    im = np.zeros((length, length))
+    points = length * np.random.random((2, n ** 2))
+    im[(points[0]).astype(np.int), (points[1]).astype(np.int)] = 1
+    im = ndimage.gaussian_filter(im, sigma=length / (4. * n))
+    mask = im > im.mean()
+
+    # 标记连接成分
+    label_im, nb_labels = ndimage.label(mask)
+    print("区域数量：{0}".format(nb_labels))
+
+    # 计算每个区域的尺寸，均值等等
+    sizes = ndimage.sum(mask, label_im, range(nb_labels + 1))
+    mean_vals = ndimage.sum(im, label_im, range(1, nb_labels + 1))
+    print("各个区域的尺寸：{0}".format(sizes))
+    print("各个区域的平均尺寸：{0}".format(mean_vals))
+
+    # 计算尺寸小的连接成分
+    mask_size = sizes < 1000
+    remove_pixel = mask_size[label_im]
+    print(remove_pixel.shape)
+    label_im2 = label_im.copy()
+    label_im2[remove_pixel] = 0
+
+    # 使用np.searchsorted重新分配标签
+    labels = np.unique(label_im2)
+    label_im3 = np.searchsorted(labels, label_im2)
+
+    # 找到关注的封闭对象区域
+    slice_x, slice_y = ndimage.find_objects(label_im3 == 4)[0]
+    roi = im[slice_x, slice_y]
+
+    images = [im, mask, label_im, label_im2, label_im3, roi]
+    pil_image_demo.plt_images(images, 3)
+
+
 if __name__ == "__main__":
     # test_show_image()
     # save_image()
@@ -346,6 +381,7 @@ if __name__ == "__main__":
     # test_filter()
     # test_morphology()
     # edge_detect()
-    test_histogram()
+    # test_histogram()
+    test_measurement()
     pass
 
