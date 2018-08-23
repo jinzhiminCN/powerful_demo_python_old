@@ -252,20 +252,27 @@ def mnist_single_perceptron_model():
     mnist单隐藏层感知器模型。
     :return:
     """
+    # 参数和占位符
     x = tf.placeholder(tf.float32, [None, 784])
     y_label = tf.placeholder(tf.float32, [None, 10])
     w1 = tf.Variable(tf.random_normal([784, 256]))
     b1 = tf.Variable(tf.random_normal([256]))
     w2 = tf.Variable(tf.random_normal([256, 10]))
     b2 = tf.Variable(tf.random_normal([10]))
+
+    # 构建网络
     lay1 = tf.nn.relu(tf.matmul(x, w1) + b1)
     y = tf.add(tf.matmul(lay1, w2), b2)
 
+    # 损失函数和准确率
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_label))
-    train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_label, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # 优化函数
+    train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
+
+    # 执行训练
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     for index in range(10000):
@@ -277,7 +284,7 @@ def mnist_single_perceptron_model():
 
     test_accuracy = sess.run(accuracy, feed_dict={x: mnist.test.images,
                                                   y_label: mnist.test.labels})
-    common_logger.info("Test Accuracy:{3:.9f}".format(test_accuracy))
+    common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
 
 
 def mnist_multi_perceptron_model():
@@ -285,6 +292,7 @@ def mnist_multi_perceptron_model():
     mnist多隐藏层感知器模型。
     :return:
     """
+    # 参数和占位符
     x = tf.placeholder(tf.float32, [None, 784])
     y_label = tf.placeholder(tf.float32, [None, 10])
     w1 = tf.Variable(tf.random_normal([784, 256]))
@@ -294,15 +302,20 @@ def mnist_multi_perceptron_model():
     w3 = tf.Variable(tf.random_normal([256, 10]))
     b3 = tf.Variable(tf.random_normal([10]))
 
-    lay1 = tf.nn.relu(tf.add(tf.matmul(x, w1),b1))
+    # 构建网络
+    lay1 = tf.nn.relu(tf.add(tf.matmul(x, w1), b1))
     lay2 = tf.nn.relu(tf.add(tf.matmul(lay1, w2), b2))
-    y = tf.add(tf.matmul(lay2, w3),b3)
+    y = tf.add(tf.matmul(lay2, w3), b3)
 
+    # 损失函数和准确率
     cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_label))
-    train_step = tf.train.GradientDescentOptimizer(0.0095).minimize(cross_entropy)
     correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_label, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
+    # 优化函数
+    train_step = tf.train.GradientDescentOptimizer(0.0095).minimize(cross_entropy)
+
+    # 执行训练
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     for index in range(10000):
