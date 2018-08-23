@@ -37,7 +37,7 @@ class BasicDNN(object):
 
         # 训练需要的超参数
         self.learning_rate = 1e-5
-        self.training_epochs = 10
+        self.training_epochs = 50
         self.batch_size = 100
         self.display_steps = 1
         self.save_steps = 1

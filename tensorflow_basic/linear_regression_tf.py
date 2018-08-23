@@ -241,12 +241,12 @@ class LinearRegressionTF(object):
 
 def plt_linear_model():
     """
-    绘画线性模型的内容。
+    绘制线性模型的数据内容。
     :return:
     """
-    train_X = np.asarray([3.3, 4.4, 5.5, 6.71, 6.93, 4.168, 9.779, 6.182, 7.59,
+    train_x = np.asarray([3.3, 4.4, 5.5, 6.71, 6.93, 4.168, 9.779, 6.182, 7.59,
                           2.167, 7.042, 10.791, 5.313, 7.997, 5.654, 9.27, 3.1])
-    train_Y = np.asarray([1.7, 2.76, 2.09, 3.19, 1.694, 1.573, 3.366, 2.596, 2.53,
+    train_y = np.asarray([1.7, 2.76, 2.09, 3.19, 1.694, 1.573, 3.366, 2.596, 2.53,
                           1.221, 2.827, 3.465, 1.65, 2.904, 2.42, 2.94, 1.3])
 
     weight1, bias1 = 0.08040322, 1.7962127
@@ -257,19 +257,28 @@ def plt_linear_model():
     y2 = x * weight2 + bias2
 
     plt.figure()
-    plt.scatter(train_X, train_Y)
+    plt.scatter(train_x, train_y)
     plt.plot(x, y1, 'r')
     plt.plot(x, y2, 'b')
     plt.show()
 
 
-if __name__ == "__main__":
+def test_train():
+    """
+    测试训练数据的过程。
+    :return:
+    """
     # Training Data
-    train_X = np.asarray([3.3, 4.4, 5.5, 6.71, 6.93, 4.168, 9.779, 6.182, 7.59,
+    train_x = np.asarray([3.3, 4.4, 5.5, 6.71, 6.93, 4.168, 9.779, 6.182, 7.59,
                           2.167, 7.042, 10.791, 5.313, 7.997, 5.654, 9.27, 3.1])
-    train_Y = np.asarray([1.7, 2.76, 2.09, 3.19, 1.694, 1.573, 3.366, 2.596, 2.53,
+    train_y = np.asarray([1.7, 2.76, 2.09, 3.19, 1.694, 1.573, 3.366, 2.596, 2.53,
                           1.221, 2.827, 3.465, 1.65, 2.904, 2.42, 2.94, 1.3])
-    train_X = train_X.reshape((-1, 1))
-    linearReg = LinearRegressionTF(train_X, train_Y, train_X.shape[1])
-    linearReg.train()
+    train_x = train_x.reshape((-1, 1))
+    linear_reg = LinearRegressionTF(train_x, train_y, train_x.shape[1])
+    linear_reg.train()
+
+
+if __name__ == "__main__":
+    test_train()
     # plt_linear_model()
+    pass
