@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 
 # ==============================================================================
-# tensorflow基本网络结构(包含一层隐藏层)。
+# tensorflow基本网络结构(包含隐藏层)。
 # ==============================================================================
 import tensorflow as tf
 import os
@@ -247,13 +247,13 @@ class BasicHiddenDNN(object):
         pass
 
 
-def simple_mnist_model():
+def mnist_single_perceptron_model():
     """
-    简单模型示例
+    mnist单隐藏层感知器模型。
     :return:
     """
     x = tf.placeholder(tf.float32, [None, 784])
-    y_ = tf.placeholder(tf.float32, [None, 10])
+    y_label = tf.placeholder(tf.float32, [None, 10])
     w1 = tf.Variable(tf.random_normal([784, 256]))
     b1 = tf.Variable(tf.random_normal([256]))
     w2 = tf.Variable(tf.random_normal([256, 10]))
@@ -261,9 +261,9 @@ def simple_mnist_model():
     lay1 = tf.nn.relu(tf.matmul(x, w1) + b1)
     y = tf.add(tf.matmul(lay1, w2), b2)
 
-    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_))
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_label))
     train_step = tf.train.GradientDescentOptimizer(0.5).minimize(cross_entropy)
-    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_, 1))
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_label, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     sess = tf.InteractiveSession()
@@ -271,17 +271,55 @@ def simple_mnist_model():
     for index in range(10000):
         batch_xs, batch_ys = mnist.train.next_batch(100)
         _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
-                                                 feed_dict={x: batch_xs, y_: batch_ys})
+                                                 feed_dict={x: batch_xs, y_label: batch_ys})
         common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
             (index + 1), index, cost_value, accuracy_value))
 
-    common_logger.info(sess.run(accuracy, feed_dict={x: mnist.test.images,
-                                                     y_: mnist.test.labels}))
+    test_accuracy = sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                                  y_label: mnist.test.labels})
+    common_logger.info("Test Accuracy:{3:.9f}".format(test_accuracy))
+
+
+def mnist_multi_perceptron_model():
+    """
+    mnist多隐藏层感知器模型。
+    :return:
+    """
+    x = tf.placeholder(tf.float32, [None, 784])
+    y_label = tf.placeholder(tf.float32, [None, 10])
+    w1 = tf.Variable(tf.random_normal([784, 256]))
+    b1 = tf.Variable(tf.random_normal([256]))
+    w2 = tf.Variable(tf.random_normal([256, 256]))
+    b2 = tf.Variable(tf.random_normal([256]))
+    w3 = tf.Variable(tf.random_normal([256, 10]))
+    b3 = tf.Variable(tf.random_normal([10]))
+
+    lay1 = tf.nn.relu(tf.add(tf.matmul(x, w1),b1))
+    lay2 = tf.nn.relu(tf.add(tf.matmul(lay1, w2), b2))
+    y = tf.add(tf.matmul(lay2, w3),b3)
+
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y, labels=y_label))
+    train_step = tf.train.GradientDescentOptimizer(0.0095).minimize(cross_entropy)
+    correct_prediction = tf.equal(tf.argmax(y, 1), tf.argmax(y_label, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    sess = tf.InteractiveSession()
+    tf.global_variables_initializer().run()
+    for index in range(10000):
+        batch_xs, batch_ys = mnist.train.next_batch(100)
+        _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
+                                                 feed_dict={x: batch_xs, y_label: batch_ys})
+        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
+            (index + 1), index, cost_value, accuracy_value))
+
+    test_accuracy = sess.run(accuracy, feed_dict={x: mnist.test.images,
+                                                  y_label: mnist.test.labels})
+    common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
 
 
 if __name__ == "__main__":
-    basicDNN = BasicHiddenDNN(n_input, n_classes)
-    basicDNN.train_mnist()
-    # simple_mnist_model()
-
+    # basicDNN = BasicHiddenDNN(n_input, n_classes)
+    # basicDNN.train_mnist()
+    mnist_multi_perceptron_model()
+    pass
 
