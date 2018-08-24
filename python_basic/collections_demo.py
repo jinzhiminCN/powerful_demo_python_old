@@ -79,7 +79,7 @@ def test_counter():
     print("出现频率最高的5个字符：{0}".format(c.most_common(5)))
 
 
-def test_orderedDict():
+def test_ordered_dict():
     """
     测试有序字典OrderedDict。
     :return:
@@ -102,10 +102,11 @@ def test_orderedDict():
     print("ordered dict keys:{0}".format(list_dict))
 
 
-def test_defaultdict():
+def test_default_dict():
     """
     在使用Python原生的数据结构dict的时候，如果用 d[key] 访问， 当指定的key不存在时，是会抛出KeyError异常的。
-    但是，如果使用defaultdict，只要传入一个默认的工厂方法，那么请求一个不存在的key时， 便会调用这个工厂方法使用其结果来作为这个key的默认值。
+    但是，如果使用defaultdict，只要传入一个默认的工厂方法，那么请求一个不存在的key时，便会调用这个工厂方法使用其结果来作为这个key的
+    默认值。
     :return:
     """
     dd = defaultdict(lambda: 'N/A')
@@ -119,6 +120,6 @@ if __name__ == "__main__":
     # test_namedtuple()
     # test_dequeue()
     # test_counter()
-    # test_orderedDict()
-    test_defaultdict()
+    # test_ordered_dict()
+    test_default_dict()
 
