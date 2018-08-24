@@ -64,7 +64,7 @@ class BasicHiddenDNN(object):
         self.init_network()
 
     @staticmethod
-    def name(self):
+    def name():
         """
         网络结构名称。
         :return:
@@ -85,7 +85,8 @@ class BasicHiddenDNN(object):
         # 初始化变量的操作应该放在最后
         self.init_variables()
 
-    def prepare_data(self):
+    @staticmethod
+    def prepare_data():
         """
         准备数据。
         :return:

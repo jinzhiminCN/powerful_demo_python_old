@@ -108,10 +108,11 @@ class BasicDNN(object):
         使用到的变量。
         :return:
         """
-        # 权重变量
-        self.weight = tf.Variable(tf.zeros([self.input_dim, self.output_dim]), name='Weights')
-        # 偏置变量
-        self.bias = tf.Variable(tf.zeros([self.output_dim]), name='Bias')
+        with tf.name_scope("Layer"):
+            # 权重变量
+            self.weight = tf.Variable(tf.zeros([self.input_dim, self.output_dim]), name='Weights')
+            # 偏置变量
+            self.bias = tf.Variable(tf.zeros([self.output_dim]), name='Bias')
 
     def init_variables(self):
         """
@@ -231,6 +232,8 @@ class BasicDNN(object):
 
             common_logger.info("Accuracy:{0}".format(test_accuracy))
 
+            self.show_variable()
+
     def test(self):
         """
         测试数据。
@@ -238,8 +241,35 @@ class BasicDNN(object):
         """
         pass
 
+    def show_variable(self):
+        """
+        输出变量的结果。
+        :return:
+        """
+        variable_names = [v.name for v in tf.trainable_variables()]
+        values = self.sess.run(variable_names)
+        for k, v in zip(variable_names, values):
+            common_logger.info("Variable: {0} {1}, {2}".format(k, v, v.shape))
+
+    @staticmethod
+    def show_variable_detail():
+        """
+        显示变量细节。
+        :return:
+        """
+        checkpoint_path = os.path.join(com_config.TF_MODEL_CHECKPOINT_DIR, "basicDNN-51")
+        reader = tf.train.NewCheckpointReader(checkpoint_path)
+        all_variables = reader.get_variable_to_shape_map()
+        common_logger.info(all_variables)
+        w1 = reader.get_tensor("Layer/Weights")
+        b1 = reader.get_tensor("Layer/Bias")
+        for i in range(784):
+            common_logger.info("Weight_{0:0>3}:{1}".format(i, w1[i]))
+        common_logger.info("Bias:{0}".format(b1))
+
+
 if __name__ == "__main__":
     basicDNN = BasicDNN(n_input, n_classes)
-    basicDNN.train_mnist()
-
+    # basicDNN.train_mnist()
+    BasicDNN.show_variable_detail()
 
