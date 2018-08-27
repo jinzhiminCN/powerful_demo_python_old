@@ -94,7 +94,7 @@ def test_truncate_norm():
 
 def test_concat():
     """
-    测试tf.concat连接操作。
+    测试tf.concat连接操作。tf.concat不会更改tensor的维度。
     :return:
     """
     t1 = [[1, 2, 3], [4, 5, 6]]
@@ -105,8 +105,8 @@ def test_concat():
     tf_shape2 = tf.shape(tf_concat2)
     test_run_sess("连接操作 axis=0：", tf_concat1)
     test_run_sess("连接操作 axis=1：", tf_concat2)
-    test_run_sess("连接操作 axis=0 shape：", tf_shape1)
-    test_run_sess("连接操作 axis=1 shape：", tf_shape2)
+    test_run_sess("连接操作 axis=0 生成结果的 shape：", tf_shape1)
+    test_run_sess("连接操作 axis=1 生成结果的 shape：", tf_shape2)
 
 
 def test_run_sess(desc, tf_op):
@@ -118,7 +118,7 @@ def test_run_sess(desc, tf_op):
     """
     with tf.Session() as sess:
         result = sess.run(tf_op)
-        common_logger.info("{0}:{1}".format(desc, result))
+        common_logger.info("{0}:\n{1}".format(desc, result))
 
 
 def test_nn_conv2d():
@@ -165,11 +165,76 @@ def test_nn_conv2d():
         common_logger.info("value:{0}".format(result_conv))
 
 
+def test_expand_dims():
+    """
+    测试tf.expand_dims方法。扩充维度。
+    :return:
+    """
+    t1 = tf.constant([1, 2, 3])
+    t2 = tf.constant([4, 5, 6])
+    # concated = tf.concat(1, [t1,t2])这样会报错，tf.concat不会更改tensor的维度。
+    t1 = tf.expand_dims(tf.constant([1, 2, 3]), 1)
+    t2 = tf.expand_dims(tf.constant([4, 5, 6]), 1)
+    t_concate = tf.concat([t1, t2], 1)
+
+    test_run_sess("expand_dim t1", t1)
+    test_run_sess("expand_dim t2", t2)
+    test_run_sess("concated", t_concate)
+
+
+def test_stack():
+    """
+    测试tf.stack方法。tf.pack已经修改维tf.stack方法。
+    :return:
+    """
+    x = tf.constant([1, 4])
+    y = tf.constant([2, 5])
+    z = tf.constant([3, 6])
+    t_stack0 = tf.stack([x, y, z])  # [[1, 4], [2, 5], [3, 6]] (Pack along first dim.)
+    t_stack1 = tf.stack([x, y, z], axis=1)  # [[1, 2, 3], [4, 5, 6]]
+    t_stack2 = tf.stack([5, 4])
+
+    test_run_sess("stack 0", t_stack0)
+    test_run_sess("stack 1", t_stack1)
+    test_run_sess("stack 2", t_stack2)
+
+
+def test_spark_to_dense():
+    """
+    测试稀疏矩阵到稠密矩阵的转换tf.sparse_to_dense。
+    :return:
+    """
+    batch_size = 6
+    label = tf.expand_dims(tf.constant([0, 2, 3, 6, 7, 9]), 1)
+    index = tf.expand_dims(tf.range(0, batch_size), 1)
+
+    # use a matrix
+    concated1 = tf.concat([index, label], 1)
+    onehot_labels1 = tf.sparse_to_dense(concated1, tf.stack([batch_size, 10]), 1.0, 0.0)
+
+    # use a vector
+    concated2 = tf.constant([1, 3, 4])
+    onehot_labels2 = tf.sparse_to_dense(concated2, tf.stack([10]), 1.0, 0.0)  # can use
+    onehot_labels4 = tf.sparse_to_dense(concated2, tf.stack([10]), concated2, 0)
+
+    # use a scalar
+    concated3 = tf.constant(5)
+    onehot_labels3 = tf.sparse_to_dense(concated3, tf.stack([10]), 1.0, 0.0)
+
+    test_run_sess("onehot_labels 1", onehot_labels1)
+    test_run_sess("onehot_labels 2", onehot_labels2)
+    test_run_sess("onehot_labels 3", onehot_labels3)
+    test_run_sess("onehot_labels 4", onehot_labels4)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
     # test_truncate_norm()
     # test_concat()
-    test_nn_conv2d()
+    # test_nn_conv2d()
+    # test_expand_dims()
+    # test_stack()
+    test_spark_to_dense()
     pass
 
