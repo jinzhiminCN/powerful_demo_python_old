@@ -4,7 +4,7 @@
 # 测试PIL Image模块的相关方法。
 # ==============================================================================
 import os
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import matplotlib.pyplot as plt
 import config.common_config as com_config
 from util.log_util import LoggerUtil
@@ -14,7 +14,7 @@ common_logger = LoggerUtil.get_common_logger()
 
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
-
+FONT = 'C:/Windows/Fonts/Arial.ttf'
 
 # =========================== function ===========================
 
@@ -287,9 +287,72 @@ def test_crop_image():
     box = (0, 0, width*0.8, height*0.8)
     # 剪切图像
     image_crop = image.crop(box)
-    # image_crop.show()
-    # 保存图像
-    image_crop.save(image_file2)
+    image_crop.show()
+    # # 保存图像
+    # image_crop.save(image_file2)
+
+
+def test_thumbnail():
+    """
+    测试图像变成缩略图标。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image = Image.open(image_file)
+
+    # 变成缩略图，等比例缩放，按照高和宽中较大值来计算比例
+    image.thumbnail((128, 128))
+    image.show()
+    common_logger.info("thumbnail size:{0}".format(image.size))
+
+
+def add_watermark(in_file, text, out_file='watermark.jpg', angle=23, opacity=0.25):
+    """
+    添加水印。
+    https://www.pythoncentral.io/watermark-images-python-2x/
+    :param in_file: 输入图片
+    :param text: 水印文本
+    :param out_file: 输出图片
+    :param angle: 角度
+    :param opacity: 透明度
+    :return:
+    """
+
+    img = Image.open(in_file).convert('RGB')
+    watermark = Image.new('RGBA', img.size, (0, 0, 0, 0))
+
+    # 找到最大字体
+    size = 2
+    n_font = ImageFont.truetype(FONT, size)
+    n_width, n_height = n_font.getsize(text)
+    while n_width + n_height < watermark.size[0]:
+        size += 2
+        n_font = ImageFont.truetype(FONT, size)
+        n_width, n_height = n_font.getsize(text)
+
+    # 构造水印图像
+    draw = ImageDraw.Draw(watermark, 'RGBA')
+    draw.text(((watermark.size[0] - n_width) / 2,
+               (watermark.size[1] - n_height) / 2),
+              text, font=n_font)
+    watermark = watermark.rotate(angle, Image.BICUBIC)
+    alpha = watermark.split()[3]
+    alpha = ImageEnhance.Brightness(alpha).enhance(opacity)
+    watermark.putalpha(alpha)
+
+    # 合成图像和水印
+    Image.composite(watermark, img, watermark).save(out_file, 'JPEG')
+
+
+def test_watermark():
+    """
+    测试构造水印。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image_watermark_file = os.path.join(image_dir, "demo_watermark.png")
+    content = "WaterMark"
+    add_watermark(image_file, content, image_watermark_file)
 
 
 if __name__ == "__main__":
@@ -302,6 +365,8 @@ if __name__ == "__main__":
     # test_image_composite()
     # test_image_eval()
     # test_image_merge()
-    test_crop_image()
+    # test_crop_image()
+    # test_thumbnail()
+    test_watermark()
 
 
