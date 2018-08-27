@@ -6,10 +6,11 @@
 import os
 from PIL import Image
 import matplotlib.pyplot as plt
-import math
-import json
 import config.common_config as com_config
+from util.log_util import LoggerUtil
 
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
@@ -273,9 +274,27 @@ def test_convert_gray():
     images = [image, image_cmyk, image_gray, image_binary]
     plt_images(images)
 
+
+def test_crop_image():
+    """
+    测试剪切图像。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image_file2 = os.path.join(image_dir, "demo2.png")
+    image = Image.open(image_file)
+    width, height = image.size
+    box = (0, 0, width*0.8, height*0.8)
+    # 剪切图像
+    image_crop = image.crop(box)
+    # image_crop.show()
+    # 保存图像
+    image_crop.save(image_file2)
+
+
 if __name__ == "__main__":
     pass
-    test_open_image()
+    # test_open_image()
     # test_convert_gray()
     # test_new_image()
     # test_image_attribute()
@@ -283,5 +302,6 @@ if __name__ == "__main__":
     # test_image_composite()
     # test_image_eval()
     # test_image_merge()
+    test_crop_image()
 
 
