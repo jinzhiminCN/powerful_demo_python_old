@@ -203,7 +203,7 @@ def local_weight_lr_mat(test_point, x_list, y_list, k=1.0):
     y_mat = np.mat(y_list)
 
     # shape 读取矩阵的长度 shape[0]获得矩阵第一维的长度
-    m = np.shape(x_mat)[0]
+    m = x_mat.shape[0]
 
     # 创建对角矩阵
     weights = np.mat(np.eye(m))
@@ -211,7 +211,7 @@ def local_weight_lr_mat(test_point, x_list, y_list, k=1.0):
     # next 2 lines create weights matrix
     for j in range(m):
         # 矩阵每行的差
-        diff_mat = test_point - x_mat[j,:]
+        diff_mat = test_point - x_mat[j, :]
         # 计算权重
         weights[j, j] = np.exp(diff_mat*diff_mat.T/(-2.0*k**2))
     xTwx = x_mat.T * (weights * x_mat)
@@ -233,7 +233,7 @@ def ridge_regression_mat(x_mat, y_mat, lam=0.2):
     :return:
     """
     xTx = x_mat.T * x_mat
-    denom = xTx + np.eye(np.shape(x_mat)[1]) * lam
+    denom = xTx + np.eye(x_mat.shape[1]) * lam
     if np.linalg.det(denom) == 0.0:
         print("This matrix is singular, cannot do inverse")
         return
@@ -241,7 +241,7 @@ def ridge_regression_mat(x_mat, y_mat, lam=0.2):
     return ws
 
 
-def test_linear_reg():
+def test_linear_regression():
     """
     测试线性回归。
     :return:
@@ -286,7 +286,7 @@ def test_local_weight_lr():
     train_x = train_x.reshape([-1, 1])
     train_y = train_y.reshape([-1, 1])
 
-    m = np.shape(train_x)[0]
+    m = train_x.shape[0]
     y_hat = np.zeros(m)
     for i in range(m):
         y_hat[i] = local_weight_lr_mat(train_x[i], train_x, train_y, 1.0)
@@ -332,7 +332,7 @@ def test_ridge_regression():
     # common_logger.info("y_mat:\n{0}".format(y_mat))
 
     num_test_pts = 30
-    w_mat = np.zeros((num_test_pts, np.shape(x_mat)[1]))
+    w_mat = np.zeros((num_test_pts, x_mat.shape[1]))
     for i in range(num_test_pts):  # 测试不同的lambda取值，获得系数
         ws = ridge_regression_mat(x_mat, y_mat, np.exp(i - 10))
         w_mat[i, :] = ws.T
@@ -344,7 +344,7 @@ def test_ridge_regression():
 
 
 if __name__ == "__main__":
-    test_linear_reg()
+    test_linear_regression()
     # test_local_weight_lr()
     test_ridge_regression()
     pass
