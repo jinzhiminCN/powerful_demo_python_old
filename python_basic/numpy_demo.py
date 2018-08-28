@@ -47,9 +47,11 @@ def test_ndarray_attribute():
     # matrix是2位数组，已经不再推荐使用。But It is no longer recommended to use this class
     m = np.asmatrix(a)
     m2 = np.matrix([[1, 2], [3, 4]])
+    m3 = np.mat([[10, 20], [30, 40]])
     common_logger.info("matrix m:\n{0}".format(m))
     common_logger.info("matrix m type:\n{0}".format(type(m)))
     common_logger.info("matrix m2:\n{0}".format(m2))
+    common_logger.info("matrix m3:\n{0}".format(m3))
 
 
 def test_ndarray_transform():
@@ -103,12 +105,27 @@ def test_ndarray_operator():
     common_logger.info("svd:\n{0}".format(nd_a_svd))
 
 
-def test_stack():
+def test_arg_function():
     """
-    ndarray叠加，重组。
+    测试arg相关的函数方法。
     :return:
     """
-    a = np.floor(10 * np.random.random((2,2)))
+    np_values = np.array([9, 4, 3, 6, 2, 7, 10, 15, 11])
+    # 计算对train_x排序的索引值
+    sort_index = np_values.argsort()
+    sort_index2 = np.argsort(np_values)
+
+    common_logger.info("np_values:\n{0}".format(np_values))
+    common_logger.info("sort_index:\n{0}".format(sort_index))
+    common_logger.info("sort_index2:\n{0}".format(sort_index2))
+
+
+def test_stack():
+    """
+    ndarray堆叠数组。
+    :return:
+    """
+    a = np.floor(10 * np.random.random((2, 2)))
     b = np.floor(10 * np.random.random((2, 2)))
     v_stack = np.vstack((a, b))
     h_stack = np.hstack((a, b))
@@ -123,5 +140,6 @@ if __name__ == "__main__":
     # test_ndarray_attribute()
     # test_ndarray_transform()
     # test_ndarray_operator()
-    test_stack()
+    # test_stack()
+    test_arg_function()
     pass
