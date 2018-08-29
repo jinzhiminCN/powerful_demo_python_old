@@ -4,6 +4,7 @@
 # tensorflow基本操作测试。
 # ==============================================================================
 import tensorflow as tf
+import numpy as np
 import os
 from util.log_util import LoggerUtil
 
@@ -199,7 +200,7 @@ def test_stack():
     test_run_sess("stack 2", t_stack2)
 
 
-def test_spark_to_dense():
+def test_sparse_to_dense():
     """
     测试稀疏矩阵到稠密矩阵的转换tf.sparse_to_dense。
     :return:
@@ -227,6 +228,30 @@ def test_spark_to_dense():
     test_run_sess("onehot_labels 4", onehot_labels4)
 
 
+def test_math_operator():
+    """
+    测试基本的数学运算。
+    :return:
+    """
+    t_v1 = tf.constant([5, 3, -4, 2, -1])
+    t_b1 = t_v1 > 0
+    t_b2 = t_v1 < tf.constant(0)
+    t_f1 = tf.cast(t_b1, tf.float64)
+    t_f2 = tf.cast(t_b2, tf.float64)
+
+    test_run_sess("compare 5 and 0", t_b1)
+    test_run_sess("compare 5 and 0", t_b2)
+    test_run_sess("compare 5 and 0", t_f1)
+    test_run_sess("compare 5 and 0", t_f2)
+
+    y_class = tf.cond(tf.greater(tf.constant(0.8), tf.constant(0.5)),
+                      lambda: tf.constant(1.0), lambda: tf.constant(0.0))
+    test_run_sess("cond", y_class)
+
+    correct = tf.equal(t_f1, tf.constant(np.zeros([5])))
+    test_run_sess("equal", correct)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -235,6 +260,7 @@ if __name__ == "__main__":
     # test_nn_conv2d()
     # test_expand_dims()
     # test_stack()
-    test_spark_to_dense()
+    # test_sparse_to_dense()
+    test_math_operator()
     pass
 
