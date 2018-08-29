@@ -22,7 +22,7 @@ class LinearRegressionTF(object):
     """
     def __init__(self, x_data, y_data, input_dim):
         """
-        初始化线性函数。
+        初始化线性回归模型。
         :param x_data: 输入x数据
         :param y_data: 输入y数据
         """
@@ -84,13 +84,6 @@ class LinearRegressionTF(object):
         # 初始化变量的操作应该放在最后
         self.init_variables()
 
-    def prepare_data(self):
-        """
-        准备数据。
-        :return:
-        """
-        pass
-
     def placeholders(self):
         """
         使用到的占位符。
@@ -144,13 +137,6 @@ class LinearRegressionTF(object):
         # self.loss = tf.reduce_mean(tf.square(self.y_input - self.y_value)) / (2 * n_samples)
         # 2. 差平方求和，配合学习率1e-3
         self.loss = tf.reduce_mean(tf.square(self.y_input - self.y_value))
-
-    def evaluate_function(self):
-        """
-        评价函数设置。
-        :return:
-        """
-        pass
 
     def solver(self):
         """
@@ -208,9 +194,6 @@ class LinearRegressionTF(object):
                     # 计算平均损失
                     avg_cost += cost_value / total_batch
 
-                    # common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f}".format(
-                    #     (epoch + 1), i, cost_value))
-
                 # 记录每轮迭代的中间结果
                 if (epoch + 1) % self.display_steps == 0:
                     common_logger.info("Epoch: {0:0>4} cost={1:.9f}".format((epoch + 1), avg_cost))
@@ -220,13 +203,6 @@ class LinearRegressionTF(object):
             self.show_variable()
             saver.save(sess, self.checkpoints_path, global_step=(self.training_epochs + 1))
             common_logger.info("Optimization Finished!")
-
-    def test(self):
-        """
-        测试数据。
-        :return:
-        """
-        pass
 
     def show_variable(self):
         """
