@@ -19,7 +19,7 @@ n_classes = 10  # MNIST total classes (0-9 digits)
 
 class BasicHiddenDNN(object):
     """
-    最简单的一层神经网络结构。
+    最简单的包含隐藏层的神经网络结构。
     """
     def __init__(self, input_dim, output_dim):
         """
@@ -84,14 +84,6 @@ class BasicHiddenDNN(object):
         self.solver()
         # 初始化变量的操作应该放在最后
         self.init_variables()
-
-    @staticmethod
-    def prepare_data():
-        """
-        准备数据。
-        :return:
-        """
-        pass
 
     def placeholders(self):
         """
@@ -221,8 +213,8 @@ class BasicHiddenDNN(object):
                     # 计算平均损失
                     avg_cost += cost_value / total_batch
 
-                    common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
-                        (epoch + 1), i, cost_value, accuracy_value))
+                    common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
+                                       .format((epoch + 1), i, cost_value, accuracy_value))
 
                 # 记录每轮迭代的中间结果
                 if (epoch + 1) % self.display_steps == 0:
@@ -240,13 +232,6 @@ class BasicHiddenDNN(object):
 
             common_logger.info("Accuracy:{0}".format(test_accuracy))
 
-    def test(self):
-        """
-        测试数据。
-        :return:
-        """
-        pass
-
 
 def mnist_single_perceptron_model():
     """
@@ -254,7 +239,7 @@ def mnist_single_perceptron_model():
     :return:
     """
     # 参数和占位符
-    x = tf.placeholder(tf.float32, [None, 784])
+    x_input = tf.placeholder(tf.float32, [None, 784])
     y_label = tf.placeholder(tf.float32, [None, 10])
     w1 = tf.Variable(tf.random_normal([784, 256]))
     b1 = tf.Variable(tf.random_normal([256]))
@@ -262,7 +247,7 @@ def mnist_single_perceptron_model():
     b2 = tf.Variable(tf.random_normal([10]))
 
     # 构建网络
-    lay1 = tf.nn.relu(tf.matmul(x, w1) + b1)
+    lay1 = tf.nn.relu(tf.matmul(x_input, w1) + b1)
     y = tf.add(tf.matmul(lay1, w2), b2)
 
     # 损失函数和准确率
@@ -277,13 +262,20 @@ def mnist_single_perceptron_model():
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     for index in range(10000):
+        # 分批训练
         batch_xs, batch_ys = mnist.train.next_batch(100)
         _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
-                                                 feed_dict={x: batch_xs, y_label: batch_ys})
-        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
-            (index + 1), index, cost_value, accuracy_value))
+                                                 feed_dict={x_input: batch_xs, y_label: batch_ys})
+        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
+                           .format((index + 1), index, cost_value, accuracy_value))
 
-    test_accuracy = sess.run(accuracy, feed_dict={x: mnist.test.images,
+    # 训练数据的准确率
+    train_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.train.images,
+                                                   y_label: mnist.train.labels})
+    common_logger.info("Train Accuracy:{0:.9f}".format(train_accuracy))
+
+    # 测试数据的准确率
+    test_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.test.images,
                                                   y_label: mnist.test.labels})
     common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
 
@@ -294,7 +286,7 @@ def mnist_multi_perceptron_model():
     :return:
     """
     # 参数和占位符
-    x = tf.placeholder(tf.float32, [None, 784])
+    x_input = tf.placeholder(tf.float32, [None, 784])
     y_label = tf.placeholder(tf.float32, [None, 10])
     w1 = tf.Variable(tf.random_normal([784, 256]))
     b1 = tf.Variable(tf.random_normal([256]))
@@ -304,7 +296,7 @@ def mnist_multi_perceptron_model():
     b3 = tf.Variable(tf.random_normal([10]))
 
     # 构建网络
-    lay1 = tf.nn.relu(tf.add(tf.matmul(x, w1), b1))
+    lay1 = tf.nn.relu(tf.add(tf.matmul(x_input, w1), b1))
     lay2 = tf.nn.relu(tf.add(tf.matmul(lay1, w2), b2))
     y = tf.add(tf.matmul(lay2, w3), b3)
 
@@ -320,13 +312,20 @@ def mnist_multi_perceptron_model():
     sess = tf.InteractiveSession()
     tf.global_variables_initializer().run()
     for index in range(10000):
+        # 分批训练
         batch_xs, batch_ys = mnist.train.next_batch(100)
         _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
-                                                 feed_dict={x: batch_xs, y_label: batch_ys})
-        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
-            (index + 1), index, cost_value, accuracy_value))
+                                                 feed_dict={x_input: batch_xs, y_label: batch_ys})
+        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
+                           .format((index + 1), index, cost_value, accuracy_value))
 
-    test_accuracy = sess.run(accuracy, feed_dict={x: mnist.test.images,
+    # 训练数据的准确率
+    train_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.train.images,
+                                                   y_label: mnist.train.labels})
+    common_logger.info("Train Accuracy:{0:.9f}".format(train_accuracy))
+
+    # 测试数据的准确率
+    test_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.test.images,
                                                   y_label: mnist.test.labels})
     common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
 
