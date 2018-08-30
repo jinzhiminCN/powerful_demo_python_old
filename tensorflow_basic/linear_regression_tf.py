@@ -78,7 +78,6 @@ class LinearRegressionTF(object):
         self.variables()
         self.inference()
         self.loss_function()
-        self.evaluate_function()
         self.summary()
         self.solver()
         # 初始化变量的操作应该放在最后
@@ -178,9 +177,9 @@ class LinearRegressionTF(object):
                 total_batch = math.ceil(total_size / self.batch_size)
 
                 # 循环运行所有批次数据
-                for i in range(total_batch):
-                    limit_begin = i * self.batch_size
-                    limit_end = max(min((i + 1) * self.batch_size, total_size), 0)
+                for i_batch in range(total_batch):
+                    limit_begin = i_batch * self.batch_size
+                    limit_end = max(min((i_batch + 1) * self.batch_size, total_size), 0)
                     batch_xs = self.x_data[limit_begin:limit_end]
                     batch_ys = self.y_data[limit_begin:limit_end]
 
@@ -190,7 +189,7 @@ class LinearRegressionTF(object):
                                  feed_dict={self.x_input: batch_xs, self.y_input: batch_ys})
 
                     # 在summary_writer中记录相应的训练过程
-                    summary_writer.add_summary(summary, epoch * total_batch + i)
+                    summary_writer.add_summary(summary, epoch * total_batch + i_batch)
                     # 计算平均损失
                     avg_cost += cost_value / total_batch
 

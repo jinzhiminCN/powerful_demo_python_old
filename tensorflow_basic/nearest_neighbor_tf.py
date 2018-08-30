@@ -5,9 +5,7 @@
 # ==============================================================================
 import tensorflow as tf
 import os
-import math
 import numpy as np
-import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 import config.common_config as com_config
 from util.log_util import LoggerUtil
@@ -110,14 +108,16 @@ class NearestNeighborTF(object):
 
             # 循环运行所有测试数据
             for i in range(len(test_x)):
-                nn_index = sess.run(self.pred_index, feed_dict={self.train_input: self.x_data, self.test_input: test_x[i, :]})
+                nn_index = sess.run(self.pred_index, feed_dict={self.train_input: self.x_data,
+                                                                self.test_input: test_x[i, :]})
                 predict_value = np.argmax(self.y_data[nn_index])
                 label_value = np.argmax(test_y[i])
 
                 if predict_value == label_value:
                     accuracy += 1. / len(test_x)
                 else:
-                    common_logger.info("Test {0} Prediction: {1} Actual Class:{2}".format(i, predict_value, label_value))
+                    common_logger.info("Test {0} Prediction: {1} Actual Class:{2}"
+                                       .format(i, predict_value, label_value))
             common_logger.info("Accuracy:{0}".format(accuracy))
 
 
@@ -140,22 +140,23 @@ def nearest_neighbor_model():
 
     accuracy = 0.
 
-    # Initialize the variables (i.e. assign their default value)
+    # Initialize the variables (idx.e. assign their default value)
     init = tf.global_variables_initializer()
 
     with tf.Session() as sess:
         sess.run(init)
 
-        for i in range(len(test_x)):
+        for idx in range(len(test_x)):
             # Get nearest neighbor
-            nn_index = sess.run(pred_index, feed_dict={train_input: train_x, test_input: test_x[i, :]})
+            nn_index = sess.run(pred_index, feed_dict={train_input: train_x, test_input: test_x[idx, :]})
             predict_value = np.argmax(train_y[nn_index])
-            label_value = np.argmax(test_y[i])
+            label_value = np.argmax(test_y[idx])
 
             if predict_value == label_value:
                 accuracy += 1. / len(test_x)
             else:
-                common_logger.info("Test {0} Prediction: {1} Actual Class:{2}".format(i, predict_value, label_value))
+                common_logger.info("Test {0} Prediction: {1} Actual Class:{2}"
+                                   .format(idx, predict_value, label_value))
 
         common_logger.info("Accuracy:{0}".format(accuracy))
 
