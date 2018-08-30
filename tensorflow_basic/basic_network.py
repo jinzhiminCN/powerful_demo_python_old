@@ -86,13 +86,6 @@ class BasicDNN(object):
         # 初始化变量的操作应该放在最后
         self.init_variables()
 
-    def prepare_data(self):
-        """
-        准备数据。
-        :return:
-        """
-        pass
-
     def placeholders(self):
         """
         使用到的占位符。
@@ -200,7 +193,7 @@ class BasicDNN(object):
                 avg_cost = 0.
                 total_batch = int(mnist.train.num_examples / self.batch_size)
                 # 循环运行所有批次数据
-                for i in range(total_batch):
+                for i_batch in range(total_batch):
                     batch_xs, batch_ys = mnist.train.next_batch(self.batch_size)
 
                     # 执行优化、损失函数、准确率
@@ -209,12 +202,12 @@ class BasicDNN(object):
                                  feed_dict={self.x_input: batch_xs, self.y_label: batch_ys})
 
                     # 在summary_writer中记录相应的训练过程
-                    summary_writer.add_summary(summary, epoch * total_batch + i)
+                    summary_writer.add_summary(summary, epoch * total_batch + i_batch)
                     # 计算平均损失
                     avg_cost += cost_value / total_batch
 
-                    common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}".format(
-                        (epoch + 1), i, cost_value, accuracy_value))
+                    common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
+                                       .format((epoch + 1), i_batch, cost_value, accuracy_value))
 
                 # 记录每轮迭代的中间结果
                 if (epoch + 1) % self.display_steps == 0:
@@ -233,13 +226,6 @@ class BasicDNN(object):
             common_logger.info("Accuracy:{0}".format(test_accuracy))
 
             self.show_variable()
-
-    def test(self):
-        """
-        测试数据。
-        :return:
-        """
-        pass
 
     def show_variable(self):
         """

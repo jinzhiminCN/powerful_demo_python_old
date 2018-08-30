@@ -200,7 +200,7 @@ class BasicHiddenDNN(object):
                 avg_cost = 0.
                 total_batch = int(mnist.train.num_examples / self.batch_size)
                 # 循环运行所有批次数据
-                for i in range(total_batch):
+                for i_batch in range(total_batch):
                     batch_xs, batch_ys = mnist.train.next_batch(self.batch_size)
 
                     # 执行优化、损失函数、准确率
@@ -209,12 +209,12 @@ class BasicHiddenDNN(object):
                                  feed_dict={self.x_input: batch_xs, self.y_label: batch_ys})
 
                     # 在summary_writer中记录相应的训练过程
-                    summary_writer.add_summary(summary, epoch * total_batch + i)
+                    summary_writer.add_summary(summary, epoch * total_batch + i_batch)
                     # 计算平均损失
                     avg_cost += cost_value / total_batch
 
                     common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
-                                       .format((epoch + 1), i, cost_value, accuracy_value))
+                                       .format((epoch + 1), i_batch, cost_value, accuracy_value))
 
                 # 记录每轮迭代的中间结果
                 if (epoch + 1) % self.display_steps == 0:
@@ -266,8 +266,8 @@ def mnist_single_perceptron_model():
         batch_xs, batch_ys = mnist.train.next_batch(100)
         _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
                                                  feed_dict={x_input: batch_xs, y_label: batch_ys})
-        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
-                           .format((index + 1), index, cost_value, accuracy_value))
+        common_logger.info("Epoch: {0:0>4} cost={1:.9f} accuracy={2:.9f}"
+                           .format(index, cost_value, accuracy_value))
 
     # 训练数据的准确率
     train_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.train.images,
@@ -316,8 +316,8 @@ def mnist_multi_perceptron_model():
         batch_xs, batch_ys = mnist.train.next_batch(100)
         _, cost_value, accuracy_value = sess.run([train_step, cross_entropy, accuracy],
                                                  feed_dict={x_input: batch_xs, y_label: batch_ys})
-        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
-                           .format((index + 1), index, cost_value, accuracy_value))
+        common_logger.info("Epoch: {0:0>4} cost={1:.9f} accuracy={2:.9f}"
+                           .format(index, cost_value, accuracy_value))
 
     # 训练数据的准确率
     train_accuracy = sess.run(accuracy, feed_dict={x_input: mnist.train.images,
