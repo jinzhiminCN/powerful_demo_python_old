@@ -8,6 +8,7 @@ import os
 import config.common_config as com_config
 from tensorflow.examples.tutorials.mnist import input_data
 from util.log_util import LoggerUtil
+from util.tensorflow_util import TensorFlowUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
@@ -111,14 +112,14 @@ class BasicCNN(object):
         :return:
         """
         self.global_step = tf.Variable(0)
-        self.w_conv1 = weight_variable([5, 5, 1, 32])
-        self.b_conv1 = bias_variable([32])
-        self.w_conv2 = weight_variable([5, 5, 32, 64])
-        self.b_conv2 = bias_variable([64])
-        self.w_full1 = weight_variable([7 * 7 * 64, 1024])
-        self.b_full1 = bias_variable([1024])
-        self.w_full2 = weight_variable([1024, self.output_dim])
-        self.b_full2 = bias_variable([self.output_dim])
+        self.w_conv1 = TensorFlowUtil.weight_variable([5, 5, 1, 32])
+        self.b_conv1 = TensorFlowUtil.bias_variable([32])
+        self.w_conv2 = TensorFlowUtil.weight_variable([5, 5, 32, 64])
+        self.b_conv2 = TensorFlowUtil.bias_variable([64])
+        self.w_full1 = TensorFlowUtil.weight_variable([7 * 7 * 64, 1024])
+        self.b_full1 = TensorFlowUtil.bias_variable([1024])
+        self.w_full2 = TensorFlowUtil.weight_variable([1024, self.output_dim])
+        self.b_full2 = TensorFlowUtil.bias_variable([self.output_dim])
 
     def init_variables(self):
         """
@@ -135,17 +136,17 @@ class BasicCNN(object):
         # 将x_input变成一个4d向量，其第2、第3维对应图片的宽、高，最后一维代表图片的颜色通道数
         x_images = tf.reshape(self.x_input, [-1, 28, 28, 1])
 
-        layer1_conv = conv2d(x_images, self.w_conv1, self.b_conv1)
-        layer1_relu = relu(layer1_conv)
-        layer1_maxpool = maxpool2d(layer1_relu)
+        layer1_conv = TensorFlowUtil.conv2d(x_images, self.w_conv1, self.b_conv1)
+        layer1_relu = TensorFlowUtil.relu(layer1_conv)
+        layer1_maxpool = TensorFlowUtil.maxpool2d(layer1_relu)
 
-        layer2_conv = conv2d(layer1_maxpool, self.w_conv2, self.b_conv2)
-        layer2_relu = relu(layer2_conv)
-        layer2_maxpool = maxpool2d(layer2_relu)
+        layer2_conv = TensorFlowUtil.conv2d(layer1_maxpool, self.w_conv2, self.b_conv2)
+        layer2_relu = TensorFlowUtil.relu(layer2_conv)
+        layer2_maxpool = TensorFlowUtil.maxpool2d(layer2_relu)
 
         layer3_flatten = tf.reshape(layer2_maxpool, [-1, self.w_full1.get_shape().as_list()[0]])
         layer3_full = tf.add(tf.matmul(layer3_flatten, self.w_full1), self.b_full1)
-        layer3_relu = relu(layer3_full)
+        layer3_relu = TensorFlowUtil.relu(layer3_full)
         layer3_dropout = tf.nn.dropout(layer3_relu, self.keep_prob)
 
         self.y_output = tf.add(tf.matmul(layer3_dropout, self.w_full2), self.b_full2)
@@ -256,73 +257,6 @@ class BasicCNN(object):
             common_logger.info("Test Accuracy:{0}".format(test_accuracy))
 
 
-def weight_variable(shape, mode="truncated_normal"):
-    """
-    构造权重变量。
-    :param shape:
-    :param mode:权重的模式
-    :return:
-    """
-    if mode == "truncated_normal":
-        initial = tf.truncated_normal(shape, stddev=0.1)
-    elif mode == "random_normal":
-        initial = tf.random_normal(shape, stddev=0.1)
-    elif mode == "constant":
-        initial = tf.constant(0.1, shape=shape)
-    else:
-        initial = tf.truncated_normal(shape, stddev=0.1)
-
-    return tf.Variable(initial)
-
-
-def bias_variable(shape, mode="constant"):
-    """
-    构造偏置变量。
-    :param shape:
-    :param mode:权重的模式
-    :return:
-    """
-    if mode == "constant":
-        initial = tf.constant(0.1, shape=shape)
-    else:
-        initial = tf.zeros(shape=shape)
-
-    return tf.Variable(initial)
-
-
-def conv2d(x, w, b, strides=1):
-    """
-    二维卷积操作。
-    :param x: 输入tensor
-    :param w: 权重变量
-    :param b: 偏置变量
-    :param strides: 步长
-    :return:
-    """
-    result = tf.nn.conv2d(x, w, strides=[1, strides, strides, 1], padding='SAME')
-    result = tf.nn.bias_add(result, b)
-    return result
-
-
-def maxpool2d(x, k=2):
-    """
-    最大池化操作。
-    :param x: 输入tensor
-    :param k: ksize
-    :return:
-    """
-    return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1], padding='SAME')
-
-
-def relu(x):
-    """
-    relu操作。
-    :param x:
-    :return:
-    """
-    return tf.nn.relu(x)
-
-
 def cnn_model():
     """
     CNN模型。
@@ -340,30 +274,30 @@ def cnn_model():
     keep_prob = tf.placeholder(tf.float32, name="dropout")
 
     global_step = tf.Variable(0)
-    w_conv1 = weight_variable([5, 5, 1, 32])
-    b_conv1 = bias_variable([32])
-    w_conv2 = weight_variable([5, 5, 32, 64])
-    b_conv2 = bias_variable([64])
-    w_full1 = weight_variable([7 * 7 * 64, 1024])
-    b_full1 = bias_variable([1024])
-    w_full2 = weight_variable([1024, n_classes])
-    b_full2 = bias_variable([n_classes])
+    w_conv1 = TensorFlowUtil.weight_variable([5, 5, 1, 32])
+    b_conv1 = TensorFlowUtil.bias_variable([32])
+    w_conv2 = TensorFlowUtil.weight_variable([5, 5, 32, 64])
+    b_conv2 = TensorFlowUtil.bias_variable([64])
+    w_full1 = TensorFlowUtil.weight_variable([7 * 7 * 64, 1024])
+    b_full1 = TensorFlowUtil.bias_variable([1024])
+    w_full2 = TensorFlowUtil.weight_variable([1024, n_classes])
+    b_full2 = TensorFlowUtil.bias_variable([n_classes])
 
     # 构建网络
     # 将x_input变成一个4d向量，其第2、第3维对应图片的宽、高，最后一维代表图片的颜色通道数
     x_images = tf.reshape(x_input, [-1, 28, 28, 1])
 
-    layer1_conv = conv2d(x_images, w_conv1, b_conv1)
-    layer1_relu = relu(layer1_conv)
-    layer1_maxpool = maxpool2d(layer1_relu)
+    layer1_conv = TensorFlowUtil.conv2d(x_images, w_conv1, b_conv1)
+    layer1_relu = TensorFlowUtil.relu(layer1_conv)
+    layer1_maxpool = TensorFlowUtil.maxpool2d(layer1_relu)
 
-    layer2_conv = conv2d(layer1_maxpool, w_conv2, b_conv2)
-    layer2_relu = relu(layer2_conv)
-    layer2_maxpool = maxpool2d(layer2_relu)
+    layer2_conv = TensorFlowUtil.conv2d(layer1_maxpool, w_conv2, b_conv2)
+    layer2_relu = TensorFlowUtil.relu(layer2_conv)
+    layer2_maxpool = TensorFlowUtil.maxpool2d(layer2_relu)
 
     layer3_flatten = tf.reshape(layer2_maxpool, [-1, w_full1.get_shape().as_list()[0]])
     layer3_full = tf.add(tf.matmul(layer3_flatten, w_full1), b_full1)
-    layer3_relu = relu(layer3_full)
+    layer3_relu = TensorFlowUtil.relu(layer3_full)
     layer3_dropout = tf.nn.dropout(layer3_relu, keep_prob)
 
     y_output = tf.add(tf.matmul(layer3_dropout, w_full2), b_full2)
