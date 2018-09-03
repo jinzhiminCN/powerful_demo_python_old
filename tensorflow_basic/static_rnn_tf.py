@@ -68,7 +68,7 @@ class StaticRNN(object):
         self.init_network()
 
     @staticmethod
-    def name(self):
+    def name():
         """
         网络结构名称。
         :return:
