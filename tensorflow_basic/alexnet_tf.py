@@ -81,8 +81,8 @@ class AlexNetTF(object):
         self.merged_summary_op = None
 
         # 目录初始化
-        self.tf_logs_path = os.path.join(com_config.TF_MODEL_LOGS_DIR, "BasicCNN")
-        self.checkpoints_path = os.path.join(com_config.TF_MODEL_CHECKPOINT_DIR, "BasicCNN")
+        self.tf_logs_path = os.path.join(com_config.TF_MODEL_LOGS_DIR, "AlexNetTF")
+        self.checkpoints_path = os.path.join(com_config.TF_MODEL_CHECKPOINT_DIR, "AlexNetTF")
 
         # 变量和参数初始化
         self.init_network()
@@ -93,7 +93,7 @@ class AlexNetTF(object):
         网络结构名称。
         :return:
         """
-        return "Basic Convolutional Neural Network(BasicCNN)"
+        return "AlexNet(AlexNet)"
 
     def init_network(self):
         """
