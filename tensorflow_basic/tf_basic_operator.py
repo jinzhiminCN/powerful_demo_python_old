@@ -174,12 +174,12 @@ def test_expand_dims():
     t1 = tf.constant([1, 2, 3])
     t2 = tf.constant([4, 5, 6])
     # concated = tf.concat(1, [t1,t2])这样会报错，tf.concat不会更改tensor的维度。
-    t1 = tf.expand_dims(tf.constant([1, 2, 3]), 1)
-    t2 = tf.expand_dims(tf.constant([4, 5, 6]), 1)
-    t_concate = tf.concat([t1, t2], 1)
+    t3 = tf.expand_dims(tf.constant([1, 2, 3]), 1)
+    t4 = tf.expand_dims(tf.constant([4, 5, 6]), 1)
+    t_concate = tf.concat([t3, t4], 1)
 
-    test_run_sess("expand_dim t1", t1)
-    test_run_sess("expand_dim t2", t2)
+    test_run_sess("expand_dim t3", t3)
+    test_run_sess("expand_dim t4", t4)
     test_run_sess("concated", t_concate)
 
 
@@ -194,10 +194,25 @@ def test_stack():
     t_stack0 = tf.stack([x, y, z])  # [[1, 4], [2, 5], [3, 6]] (Pack along first dim.)
     t_stack1 = tf.stack([x, y, z], axis=1)  # [[1, 2, 3], [4, 5, 6]]
     t_stack2 = tf.stack([5, 4])
+    x_unstack = tf.unstack(x)
+
+    t_stack = tf.constant([[1, 2, 3],
+                           [4, 5, 6],
+                           [7, 8, 9],
+                           [10, 11, 12]])
+    t_unstack1 = tf.unstack(t_stack)
+    t_unstack2 = tf.unstack(t_stack, axis=1)
+    t_unstack3 = tf.unstack(t_stack, num=4)
+    t_unstack4 = tf.unstack(t_stack, num=3, axis=1)
 
     test_run_sess("stack 0", t_stack0)
     test_run_sess("stack 1", t_stack1)
     test_run_sess("stack 2", t_stack2)
+    test_run_sess("unstack x", x_unstack)
+    test_run_sess("unstack 1", t_unstack1)
+    test_run_sess("unstack 2", t_unstack2)
+    test_run_sess("unstack 3", t_unstack3)
+    test_run_sess("unstack 4", t_unstack4)
 
 
 def test_sparse_to_dense():
@@ -252,6 +267,34 @@ def test_math_operator():
     test_run_sess("equal", correct)
 
 
+def test_distance():
+    """
+    测试距离。
+    :return:
+    """
+    t_vector = tf.constant([[1, 2, 3],
+                            [1, 2, 1],
+                            [0, 1, 2],
+                            [1, 2, 0],
+                            [1, 1, 1],
+                            [0, 1, -1],
+                           ])
+    t_const = tf.constant([1, 1, 1])
+    t_abs = tf.abs(tf.add(t_vector, tf.negative(t_const)))
+    t_square = tf.square(tf.add(t_vector, tf.negative(t_const)))
+    distance0 = tf.reduce_sum(t_abs, axis=0)
+    # L1 distance
+    distance1 = tf.reduce_sum(t_abs, axis=1)
+    # L2 distance
+    distance2 = tf.sqrt(tf.cast(tf.reduce_sum(t_square, axis=1), tf.float32))
+
+    test_run_sess("t_abs", t_abs)
+    test_run_sess("t_square", t_square)
+    test_run_sess("distance0", distance0)
+    test_run_sess("distance1", distance1)
+    test_run_sess("distance2", distance2)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -259,8 +302,9 @@ if __name__ == "__main__":
     # test_concat()
     # test_nn_conv2d()
     # test_expand_dims()
-    # test_stack()
+    test_stack()
     # test_sparse_to_dense()
-    test_math_operator()
+    # test_math_operator()
+    # test_distance()
     pass
 
