@@ -5,6 +5,7 @@
 # ==============================================================================
 import tensorflow as tf
 import os
+import random
 import config.common_config as com_config
 from tensorflow.examples.tutorials.mnist import input_data
 from util.log_util import LoggerUtil
@@ -243,6 +244,69 @@ class StaticRNN(object):
             common_logger.info("Variable: {0} {1}, {2}".format(k, v, v.shape))
 
 
+class DynamicLengthSeqData(object):
+    """
+    生成随机长度的序列数据。包括两类数据，线性序列数据和随机序列数据。
+    注意：虽然生成序列的长度不相同，但是输入到tensorflow模型中的数据长度必须相同，
+    所以需要对不同长度的序列进行填充。
+    - Class 0: linear sequences (i.e. [0, 1, 2, 3,...])
+    - Class 1: random sequences (i.e. [1, 3, 10, 7,...])
+    """
+    def __init__(self, n_samples=1000, max_seq_len=20, min_seq_len=3,
+                 max_value=1000):
+        """
+        数据初始化。
+        :param n_samples: 样本数量
+        :param max_seq_len: 最大序列长度
+        :param min_seq_len: 最小序列长度
+        :param max_value: 最大值
+        """
+        self.data = []
+        self.labels = []
+        self.seq_lens = []
+        for i in range(n_samples):
+            seq_len = random.randint(min_seq_len, max_seq_len)
+            self.seq_lens.append(seq_len)
+
+            # 随机生成线性序列和随机序列
+            if random.random() < .5:
+                # 生成线性序列
+                rand_start = random.randint(0, max_value - seq_len)
+                seq = [[float(i)/max_value] for i in
+                       range(rand_start, rand_start + seq_len)]
+                # 填充序列的剩余部分
+                seq += [[0.] for i in range(max_seq_len - seq_len)]
+                self.data.append(seq)
+                self.labels.append([1., 0.])
+            else:
+                # 生成随机序列
+                seq = [[float(random.randint(0, max_value))/max_value]
+                       for i in range(seq_len)]
+                # 填充序列的剩余部分
+                seq += [[0.] for i in range(max_seq_len - seq_len)]
+                self.data.append(seq)
+                self.labels.append([0., 1.])
+        self.batch_id = 0
+
+    def next(self, batch_size):
+        """
+        获取下一批数据。
+        :param batch_size:
+        :return:
+        """
+        if self.batch_id == len(self.data):
+            self.batch_id = 0
+
+        next_batch_id = min(self.batch_id + batch_size, len(self.data))
+
+        batch_data = (self.data[self.batch_id:next_batch_id])
+        batch_labels = (self.labels[self.batch_id:next_batch_id])
+        batch_seq_lens = (self.seq_lens[self.batch_id:next_batch_id])
+
+        self.batch_id = next_batch_id
+        return batch_data, batch_labels, batch_seq_lens
+
+
 def static_rnn_model():
     """
     静态循环神经网络模型。
@@ -271,7 +335,7 @@ def static_rnn_model():
     x_images = tf.reshape(x_input, shape=[-1, time_steps, num_input])
     x_stack = tf.unstack(x_images, time_steps, 1)
     lstm_cell = tf.contrib.rnn.BasicLSTMCell(num_hidden, forget_bias=1.0)
-    outputs, states = tf.contrib.rnn.static_rnn(lstm_cell, x_stack, dtype=tf.float32)
+    outputs, states = tf.nn.static_rnn(lstm_cell, x_stack, dtype=tf.float32)
     y_value = tf.matmul(outputs[-1], w_out) + b_out
     y_predict = tf.nn.softmax(y_value)
 
@@ -308,9 +372,88 @@ def static_rnn_model():
     common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
 
 
+def random_length_static_rnn_model():
+    """
+    随机长度序列的静态rnn模型。
+    :return:
+    """
+    # 超参数
+    learning_rate = 0.01
+    training_steps = 10000
+    batch_size = 128
+    display_steps = 500
+
+    seq_max_len = 20
+    num_hidden = 64
+    num_classes = 2
+
+    train_set = DynamicLengthSeqData(n_samples=1000, max_seq_len=seq_max_len)
+    test_set = DynamicLengthSeqData(n_samples=500, max_seq_len=seq_max_len)
+
+    # 参数和占位符
+    x_input = tf.placeholder(tf.float32, [None, seq_max_len, 1], name="x_input")
+    y_label = tf.placeholder(tf.float32, [None, num_classes], name="y_label")
+    seq_len = tf.placeholder(tf.int32, [None])
+
+    # 初始化变量对结果的影响很大
+    w_out = tf.Variable(tf.random_normal([num_hidden, num_classes]))
+    b_out = tf.Variable(tf.random_normal([num_classes]))
+    # 如下变量效果并不好
+    # w_out = TensorFlowUtil.weight_variable([num_hidden, num_classes])
+    # b_out = TensorFlowUtil.bias_variable([num_classes])
+
+    # 构建网络
+    x_stack = tf.unstack(x_input, seq_max_len, 1)
+    lstm_cell = tf.contrib.rnn.BasicLSTMCell(num_hidden)
+    outputs, states = tf.contrib.rnn.static_rnn(lstm_cell, x_stack, dtype=tf.float32,
+                                                sequence_length=seq_len)
+    outputs = tf.stack(outputs)
+    outputs = tf.transpose(outputs, [1, 0, 2])
+
+    output_batch_size = tf.shape(outputs)[0]
+    index = tf.range(0, output_batch_size) * seq_max_len + (seq_len - 1)
+    outputs = tf.gather(tf.reshape(outputs, [-1, num_hidden]), index)
+    y_value = tf.matmul(outputs, w_out) + b_out
+    # y_predict = tf.nn.softmax(y_value)
+
+    # 损失函数和准确率
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=y_value, labels=y_label))
+    correct_prediction = tf.equal(tf.argmax(y_value, 1), tf.argmax(y_label, 1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+    # 优化函数
+    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(cross_entropy)
+
+    # 执行训练
+    sess = tf.InteractiveSession()
+    tf.global_variables_initializer().run()
+    for index in range(training_steps):
+        # 分批训练
+        batch_x, batch_y, batch_seq_len = train_set.next(batch_size)
+
+        sess.run(train_step, feed_dict={x_input: batch_x, y_label: batch_y,
+                                        seq_len: batch_seq_len})
+
+        if index % display_steps == 0 or index == 0:
+            cost_value, accuracy_value = sess.run([cross_entropy, accuracy],
+                                                  feed_dict={x_input: batch_x, y_label: batch_y,
+                                                  seq_len: batch_seq_len})
+            common_logger.info("Epoch: {0:0>4} cost={1:.9f} accuracy={2:.9f}"
+                               .format(index, cost_value, accuracy_value))
+
+    # 测试数据的准确率
+    test_data = test_set.data
+    test_label = test_set.labels
+    test_seq_lens = test_set.seq_lens
+    test_accuracy = sess.run(accuracy, feed_dict={x_input: test_data, y_label: test_label,
+                                                  seq_len: test_seq_lens})
+    common_logger.info("Test Accuracy:{0:.9f}".format(test_accuracy))
+
+
 if __name__ == "__main__":
     # static_rnn_model()
-    static_rnn = StaticRNN(n_input, n_classes)
-    static_rnn.train_mnist()
+    random_length_static_rnn_model()
+    # static_rnn = StaticRNN(n_input, n_classes)
+    # static_rnn.train_mnist()
     pass
 
