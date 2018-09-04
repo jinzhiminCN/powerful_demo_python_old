@@ -118,6 +118,7 @@ def test_run_sess(desc, tf_op):
     :return:
     """
     with tf.Session() as sess:
+        sess.run(tf.global_variables_initializer())
         result = sess.run(tf_op)
         common_logger.info("{0}:\n{1}".format(desc, result))
 
@@ -164,6 +165,147 @@ def test_nn_conv2d():
         common_logger.info("kernel:{0}".format(kernel))
         common_logger.info("shape:{0}".format(result_shape))
         common_logger.info("value:{0}".format(result_conv))
+
+
+def test_conv1d():
+    """
+    测试一维卷积操作。
+    :return:
+    """
+    v_list = [i for i in range(10)]
+
+    v_shape = [1, -1, 1]
+    v_const = tf.constant(v_list)
+    v_const = tf.cast(v_const, "float32")
+    v_input = tf.reshape(v_const, shape=v_shape)
+
+    # 输入数据
+    test_run_sess("v_input", v_input)
+
+    # 情况1
+    v_conv1d_same = tf.layers.conv1d(v_input, filters=2, kernel_size=3, strides=1, padding="same",
+                                     kernel_initializer=tf.ones_initializer(), use_bias=False)
+    v_conv1d_valid = tf.layers.conv1d(v_input, filters=2, kernel_size=3, strides=1, padding="valid",
+                                      kernel_initializer=tf.ones_initializer(), use_bias=False)
+    test_run_sess("v_conv1d_same kernel=ones", v_conv1d_same)
+    test_run_sess("v_conv1d_valid kernel=ones", v_conv1d_valid)
+
+    # 情况2
+    v_conv1d_same = tf.layers.conv1d(v_input, filters=2, kernel_size=3, strides=1, padding="same",
+                                     kernel_initializer=tf.ones_initializer(),
+                                     bias_initializer=tf.ones_initializer(), use_bias=True)
+    v_conv1d_valid = tf.layers.conv1d(v_input, filters=2, kernel_size=3, strides=1, padding="valid",
+                                      kernel_initializer=tf.ones_initializer(),
+                                      bias_initializer=tf.ones_initializer(), use_bias=True)
+    test_run_sess("v_conv1d_same kernel=ones bias=ones", v_conv1d_same)
+    test_run_sess("v_conv1d_valid kernel=ones bias=ones", v_conv1d_valid)
+
+    # 情况3
+    const_initializer = tf.constant_initializer([1., 2., 1.])
+    v_conv1d_same = tf.layers.conv1d(v_input, filters=1, kernel_size=3, strides=1, padding="same",
+                                     kernel_initializer=const_initializer, use_bias=False)
+    v_conv1d_valid = tf.layers.conv1d(v_input, filters=1, kernel_size=3, strides=1, padding="valid",
+                                      kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("v_conv1d_same filter=1 kernel=const(1,2,1)", v_conv1d_same)
+    test_run_sess("v_conv1d_valid filter=1 kernel=const(1,2,1)", v_conv1d_valid)
+
+    # 情况4 filters=(2, 3, 4)
+    const_initializer = tf.constant_initializer([1., 2., 1.])
+    v_conv1d_same = tf.layers.conv1d(v_input, filters=3, kernel_size=3, strides=1, padding="same",
+                                     kernel_initializer=const_initializer, use_bias=False)
+    v_conv1d_valid = tf.layers.conv1d(v_input, filters=3, kernel_size=3, strides=1, padding="valid",
+                                      kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("v_conv1d_same filter=3 kernel=const(1,2,1)", v_conv1d_same)
+    test_run_sess("v_conv1d_valid filter=3 kernel=const(1,2,1)", v_conv1d_valid)
+
+
+def test_conv2d():
+    """
+    测试二维卷积运算。
+    :return:
+    """
+    v_list = [i for i in range(26)]
+    v_list.remove(0)
+
+    v_shape = [1, 5, 5, 1]
+    v_const = tf.constant(v_list)
+    v_const = tf.cast(v_const, "float32")
+    v_input = tf.reshape(v_const, shape=v_shape)
+
+    # 输入数据
+    test_run_sess("v_input", v_input)
+
+    # 情况1
+    v_conv2d_same = tf.layers.conv2d(v_input, filters=2, kernel_size=2, strides=1, padding="same",
+                                     kernel_initializer=tf.ones_initializer(), use_bias=False)
+    v_conv2d_valid = tf.layers.conv2d(v_input, filters=2, kernel_size=2, strides=1, padding="valid",
+                                      kernel_initializer=tf.ones_initializer(), use_bias=False)
+    test_run_sess("v_conv2d_same kernel=ones", v_conv2d_same)
+    test_run_sess("v_conv2d_valid kernel=ones", v_conv2d_valid)
+
+    # 情况2
+    const_initializer = tf.constant_initializer([1., 2., 3., 4.])
+    v_conv2d_same = tf.layers.conv2d(v_input, filters=1, kernel_size=2, strides=1, padding="same",
+                                     kernel_initializer=const_initializer, use_bias=False)
+    v_conv2d_valid = tf.layers.conv2d(v_input, filters=1, kernel_size=2, strides=1, padding="valid",
+                                      kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("v_conv2d_same kernel=const", v_conv2d_same)
+    test_run_sess("v_conv2d_valid kernel=const", v_conv2d_valid)
+
+    # 情况3
+    const_initializer = tf.constant_initializer([1., 2., 3., 4.])
+    v_conv2d_same = tf.layers.conv2d(v_input, filters=3, kernel_size=2, strides=1, padding="same",
+                                     kernel_initializer=const_initializer, use_bias=False)
+    v_conv2d_valid = tf.layers.conv2d(v_input, filters=3, kernel_size=2, strides=1, padding="valid",
+                                      kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("v_conv2d_same filters=3 kernel=const", v_conv2d_same)
+    test_run_sess("v_conv2d_valid filters=3 kernel=const", v_conv2d_valid)
+
+    # 情况4
+    point_filter = tf.constant(value=1, shape=[2, 2, 2, 1], dtype=tf.float32)
+    v_input2 = tf.concat(values=[v_input, v_input], axis=3)
+    v_conv2d_same = tf.nn.conv2d(v_input2, filter=point_filter, strides=[1, 1, 1, 1], padding="SAME")
+    v_conv2d_valid = tf.nn.conv2d(v_input2, filter=point_filter, strides=[1, 1, 1, 1], padding="VALID")
+    test_run_sess("v_input2", v_input2)
+    test_run_sess("v_conv2d_same filters=point_filter", v_conv2d_same)
+    test_run_sess("v_conv2d_valid filters=point_filter", v_conv2d_valid)
+
+    hole_image_same = tf.nn.atrous_conv2d(v_input2, filters=point_filter, rate=2, padding="SAME")
+    hole_image_valid = tf.nn.atrous_conv2d(v_input2, filters=point_filter, rate=2, padding="VALID")
+    test_run_sess("空洞卷积 hole_image_same filters=point_filter", hole_image_same)
+    test_run_sess("空洞卷积 hole_image_valid filters=point_filter", hole_image_valid)
+
+
+def test_conv2d_transpose():
+    """
+    测试二维逆卷积运算。
+    :return:
+    """
+    v_list = [i for i in range(26)]
+    v_list.remove(0)
+
+    v_shape = [1, 5, 5, 1]
+    v_const = tf.constant(v_list)
+    v_const = tf.cast(v_const, "float32")
+    v_input = tf.reshape(v_const, shape=v_shape)
+
+    # 情况1
+    const_initializer = tf.constant_initializer([1., 1., 1., 1.])
+    v_conv2d_same = tf.layers.conv2d_transpose(v_input, filters=2, kernel_size=2, strides=1, padding="same",
+                                               kernel_initializer=const_initializer, use_bias=False)
+    v_conv2d_valid = tf.layers.conv2d_transpose(v_input, filters=2, kernel_size=2, strides=1, padding="valid",
+                                                kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("二维逆卷积 same", v_conv2d_same)
+    test_run_sess("二维逆卷积 valid", v_conv2d_valid)
+
+    # 情况2
+    const_initializer = tf.constant_initializer([1., 2., 2., 1.])
+    v_conv2d_same = tf.layers.conv2d_transpose(v_input, filters=1, kernel_size=2, strides=1, padding="same",
+                                               kernel_initializer=const_initializer, use_bias=False)
+    v_conv2d_valid = tf.layers.conv2d_transpose(v_input, filters=1, kernel_size=2, strides=1, padding="valid",
+                                                kernel_initializer=const_initializer, use_bias=False)
+    test_run_sess("二维逆卷积 same", v_conv2d_same)
+    test_run_sess("二维逆卷积 valid", v_conv2d_valid)
 
 
 def test_expand_dims():
@@ -295,6 +437,206 @@ def test_distance():
     test_run_sess("distance2", distance2)
 
 
+def test_maxpool():
+    """
+    测试最大池化。
+    :return:
+    """
+    x = tf.constant([[1., 2., 3.],
+                     [4., 5., 6.]])
+
+    # give a shape accepted by tf.nn.max_pool
+    x = tf.reshape(x, [1, 2, 3, 1])
+
+    valid_pad = tf.nn.max_pool(x, [1, 2, 2, 1], [1, 2, 2, 1], padding='VALID')
+    same_pad = tf.nn.max_pool(x, [1, 2, 2, 1], [1, 2, 2, 1], padding='SAME')
+
+    test_run_sess("valid_pad", valid_pad)
+    test_run_sess("same_pad", same_pad)
+    common_logger.info("valid_pad shape:{0}".format(valid_pad.get_shape()))
+    common_logger.info("same_pad shape:{0}".format(same_pad.get_shape()))
+
+
+def test_average_pooling_1d():
+    """
+    一维平均池化操作。
+    :return:
+    """
+    v_list = tf.constant([1, 2, 3, 4, 3, 2, 4, 2, 4, 3, 4, 5])
+
+    v_matrix323 = tf.constant([[[1, 1, 1],
+                                [2, 2, 2]],
+                               [[3, 3, 3],
+                                [4, 4, 4]],
+                               [[5, 5, 5],
+                                [6, 6, 6]]],
+                              dtype="float16")
+
+    v_matrix343 = tf.constant([[[1, 1, 1],
+                                [2, 2, 2],
+                                [3, 3, 3],
+                                [4, 4, 4]],
+                               [[3, 3, 3],
+                                [4, 4, 4],
+                                [5, 5, 5],
+                                [6, 6, 6]],
+                               [[5, 5, 5],
+                                [6, 6, 6],
+                                [7, 7, 7],
+                                [8, 8, 8]]],
+                              dtype="float16")
+
+    v_matrix353 = tf.constant([[[1, 1, 1],
+                                [2, 2, 2],
+                                [3, 3, 3],
+                                [4, 4, 4],
+                                [5, 5, 5]],
+                               [[3, 3, 3],
+                                [4, 4, 4],
+                                [5, 5, 5],
+                                [6, 6, 6],
+                                [7, 7, 7]],
+                               [[5, 5, 5],
+                                [6, 6, 6],
+                                [7, 7, 7],
+                                [8, 8, 8],
+                                [9, 9, 9]]],
+                              dtype="float16")
+
+    v_matrix333 = tf.constant([[[1, 1, 1],
+                                [2, 2, 2],
+                                [3, 3, 3]],
+                               [[3, 3, 3],
+                                [4, 4, 4],
+                                [5, 5, 5]],
+                               [[5, 5, 5],
+                                [6, 6, 6],
+                                [7, 7, 7]]],
+                              dtype="float16")
+
+    v_matrix332 = tf.constant([[[1, 2.5],
+                                [2, 3.5],
+                                [3, 4.5]],
+                               [[3, 4.5],
+                                [4, 5.5],
+                                [5, 6.5]],
+                               [[5, 7.5],
+                                [6, 8.5],
+                                [7, 9.5]]],
+                              dtype="float16")
+
+    v_matrix = v_matrix333
+
+    average_pool_valid = tf.layers.average_pooling1d(v_matrix, pool_size=3, strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling1d(v_matrix, pool_size=3, strides=1, padding="same")
+    average_pool_valid_2 = tf.layers.average_pooling1d(v_matrix, pool_size=2, strides=1, padding="valid",
+                                                       data_format="channels_first")
+    average_pool_same_2 = tf.layers.average_pooling1d(v_matrix, pool_size=2, strides=1, padding="same",
+                                                      data_format="channels_first")
+
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充", average_pool_valid)
+    test_run_sess("池化same填充", average_pool_same)
+    # test_run_sess("池化valid填充2", average_pool_valid_2)
+    # test_run_sess("池化same填充2", average_pool_same_2)
+
+
+def test_average_pooling_2d():
+    """
+    测试二维平均池化运算。
+    :return:
+    """
+    v_matrix1332 = tf.constant([[[[1, 2], [1, 2], [1, 2]],
+                                 [[2, 3], [2, 3], [2, 3]],
+                                 [[3, 4], [3, 4], [3, 4]]]],
+                               dtype="float16")
+
+    v_matrix3332 = tf.constant([[[[1, 2], [1, 2], [1, 2]],
+                                 [[2, 3], [2, 3], [2, 3]],
+                                 [[3, 4], [3, 4], [3, 4]]],
+                                [[[3, 4], [3, 4], [3, 4]],
+                                 [[4, 5], [4, 5], [4, 5]],
+                                 [[5, 6], [5, 6], [5, 6]]],
+                                [[[5, 6], [5, 6], [5, 6]],
+                                 [[6, 7], [6, 7], [6, 7]],
+                                 [[7, 8], [7, 8], [7, 8]]]],
+                               dtype="float16")
+
+    v_matrix = v_matrix1332
+
+    average_pool_valid = tf.layers.average_pooling2d(v_matrix, pool_size=3, strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling2d(v_matrix, pool_size=3, strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=3", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=3", average_pool_same)
+
+    average_pool_valid = tf.layers.average_pooling2d(v_matrix, pool_size=2, strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling2d(v_matrix, pool_size=2, strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=2", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=2", average_pool_same)
+
+    average_pool_valid = tf.layers.average_pooling2d(v_matrix, pool_size=(2, 3), strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling2d(v_matrix, pool_size=(2, 3), strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=(2, 3)", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=(2, 3)", average_pool_same)
+
+
+def test_average_pooling_3d():
+    """
+    测试三维平均池化运算。
+    :return:
+    """
+    v_matrix13232 = tf.constant([[[[[1, 2], [3, 4], [5, 6]],
+                                   [[7, 8], [9, 10], [11, 12]]],
+                                  [[[13, 14], [15, 16], [17, 18]],
+                                   [[19, 20], [21, 22], [23, 24]]],
+                                  [[[25, 26], [27, 28], [29, 30]],
+                                   [[31, 32], [33, 34], [35, 36]]]]],
+                                dtype="float32")
+
+    v_matrix = v_matrix13232
+
+    average_pool_valid = tf.layers.average_pooling3d(v_matrix, pool_size=2, strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling3d(v_matrix, pool_size=2, strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=2", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=2", average_pool_same)
+
+    average_pool_valid = tf.layers.average_pooling3d(v_matrix, pool_size=(2, 1, 2), strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling3d(v_matrix, pool_size=(2, 1, 2), strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=(2, 1, 2)", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=(2, 1, 2)", average_pool_same)
+
+    average_pool_valid = tf.layers.average_pooling3d(v_matrix, pool_size=(2, 1, 1), strides=1, padding="valid")
+    average_pool_same = tf.layers.average_pooling3d(v_matrix, pool_size=(2, 1, 1), strides=1, padding="same")
+    test_run_sess("原始数据", v_matrix)
+    test_run_sess("池化valid填充 pool_size=(2, 1, 1)", average_pool_valid)
+    test_run_sess("池化same填充 pool_size=(2, 1, 1)", average_pool_same)
+
+
+def test_flatten():
+    """
+    测试平铺操作。
+    :return:
+    """
+    x1 = tf.constant(1, shape=(1, 4, 4), dtype='float32')
+    flatten_x1 = tf.layers.flatten(x1)
+    x2 = tf.constant(1, shape=(1, 3, 5), dtype='float32')
+    flatten_x2 = tf.layers.flatten(x2)
+    x3 = tf.constant(1, shape=(1, 4), dtype='float32')
+    flatten_x3 = tf.layers.flatten(x3)
+    # flatten 操作最少需要2个维度
+    # x4 = tf.constant([1, 2, 3, 4])
+    # flatten_x4 = tf.layers.flatten(x4)
+
+    test_run_sess("flatten_x1", flatten_x1)
+    test_run_sess("flatten_x2", flatten_x2)
+    test_run_sess("flatten_x3", flatten_x3)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -302,9 +644,17 @@ if __name__ == "__main__":
     # test_concat()
     # test_nn_conv2d()
     # test_expand_dims()
-    test_stack()
+    # test_stack()
     # test_sparse_to_dense()
     # test_math_operator()
     # test_distance()
+    # test_maxpool()
+    # test_flatten()
+    # test_conv1d()
+    # test_conv2d()
+    # test_conv2d_transpose()
+    # test_average_pooling_1d()
+    test_average_pooling_2d()
+    # test_average_pooling_3d()
     pass
 
