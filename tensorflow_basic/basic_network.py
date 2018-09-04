@@ -23,9 +23,9 @@ class BasicDNN(object):
     """
     def __init__(self, input_dim, output_dim):
         """
-        初始化网络数据
-        :param input_dim:
-        :param output_dim:
+        初始化神经网络的数据。
+        :param input_dim: 输入数据的维度
+        :param output_dim: 输出结果的维度
         """
         # 网络结构参数
         self.x_input = None
@@ -64,7 +64,7 @@ class BasicDNN(object):
         self.init_network()
 
     @staticmethod
-    def name(self):
+    def name():
         """
         网络结构名称。
         :return:
