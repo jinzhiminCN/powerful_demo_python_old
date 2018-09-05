@@ -3,17 +3,8 @@
 # ==============================================================================
 # tensorflow循环神经网络结构。recurrent neural network
 # ==============================================================================
-import tensorflow as tf
-import os
-import random
-import config.common_config as com_config
-from tensorflow.examples.tutorials.mnist import input_data
-from util.log_util import LoggerUtil
 from util.tensorflow_util import TensorFlowUtil
 from tensorflow_basic.base_dnn_tf import *
-
-# 日志器
-common_logger = LoggerUtil.get_common_logger()
 
 
 class StaticBidirectionalRNN(BaseDNN):
