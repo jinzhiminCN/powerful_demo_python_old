@@ -3,23 +3,12 @@
 # ==============================================================================
 # tensorflow循环神经网络结构。recurrent neural network
 # ==============================================================================
-import tensorflow as tf
-import os
 import random
-import config.common_config as com_config
-from tensorflow.examples.tutorials.mnist import input_data
-from util.log_util import LoggerUtil
 from util.tensorflow_util import TensorFlowUtil
-
-# 日志器
-common_logger = LoggerUtil.get_common_logger()
-# mnist数据
-mnist = input_data.read_data_sets(com_config.MNIST_DIR, one_hot=True)
-n_input = 784  # MNIST data input (img shape: 28*28)
-n_classes = 10  # MNIST total classes (0-9 digits)
+from tensorflow_basic.base_dnn_tf import *
 
 
-class StaticRNN(object):
+class StaticRNN(BaseDNN):
     """
     静态循环神经网络。
     """
@@ -180,58 +169,8 @@ class StaticRNN(object):
         训练mnist数据
         :return:
         """
-        with tf.Session() as sess:
-            self.sess = sess
-            # 执行初始化
-            sess.run(self.initializer)
-            # summary writer
-            summary_writer = tf.summary.FileWriter(self.tf_logs_path,
-                                                   graph=tf.get_default_graph())
-            # saver
-            saver = tf.train.Saver()
-
-            # 训练数据
-            for epoch in range(self.training_epochs):
-                avg_cost = 0.
-                total_batch = int(mnist.train.num_examples / self.batch_size)
-                # 循环运行所有批次数据
-                for i_batch in range(total_batch):
-                    batch_xs, batch_ys = mnist.train.next_batch(self.batch_size)
-
-                    total_index = epoch * total_batch + i_batch
-                    # 执行优化、损失函数、准确率
-                    if i_batch % self.display_steps == 0:
-                        _, cost_value, accuracy_value, summary = \
-                            sess.run([self.optimizer, self.loss, self.accuracy, self.merged_summary_op],
-                                     feed_dict={self.x_input: batch_xs, self.y_label: batch_ys})
-
-                        # 在summary_writer中记录相应的训练过程
-                        summary_writer.add_summary(summary, total_index)
-                        # 计算平均损失
-                        avg_cost += cost_value / total_batch
-
-                        common_logger.info("Epoch: {0:0>4}_{1:0>4} cost={2:.9f} accuracy={3:.9f}"
-                                           .format((epoch + 1), i_batch, cost_value, accuracy_value))
-                    else:
-                        sess.run(self.optimizer, feed_dict={self.x_input: batch_xs, self.y_label: batch_ys})
-
-                # 记录每轮迭代的中间结果
-                if (epoch + 1) % self.display_steps == 0:
-                    common_logger.info("Epoch: {0:0>4} cost={1:.9f}".format((epoch + 1), avg_cost))
-                if (epoch + 1) % self.save_steps == 0:
-                    saver.save(sess, self.checkpoints_path, global_step=(epoch + 1))
-
-            # 记录训练的最终结果
-            saver.save(sess, self.checkpoints_path, global_step=(self.training_epochs + 1))
-            common_logger.info("Optimization Finished!")
-
-            # 测试模型，计算测试数据的准确率
-            test_accuracy = self.accuracy.eval(
-                {self.x_input: mnist.test.images, self.y_label: mnist.test.labels})
-
-            common_logger.info("Accuracy:{0}".format(test_accuracy))
-
-            self.show_variable()
+        super().train_mnist()
+        self.show_variable()
 
     def show_variable(self):
         """
@@ -275,15 +214,15 @@ class DynamicLengthSeqData(object):
                 seq = [[float(i)/max_value] for i in
                        range(rand_start, rand_start + seq_len)]
                 # 填充序列的剩余部分
-                seq += [[0.] for i in range(max_seq_len - seq_len)]
+                seq += [[0.] for _ in range(max_seq_len - seq_len)]
                 self.data.append(seq)
                 self.labels.append([1., 0.])
             else:
                 # 生成随机序列
                 seq = [[float(random.randint(0, max_value))/max_value]
-                       for i in range(seq_len)]
+                       for _ in range(seq_len)]
                 # 填充序列的剩余部分
-                seq += [[0.] for i in range(max_seq_len - seq_len)]
+                seq += [[0.] for _ in range(max_seq_len - seq_len)]
                 self.data.append(seq)
                 self.labels.append([0., 1.])
         self.batch_id = 0
@@ -452,8 +391,8 @@ def random_length_static_rnn_model():
 
 if __name__ == "__main__":
     # static_rnn_model()
-    random_length_static_rnn_model()
-    # static_rnn = StaticRNN(n_input, n_classes)
-    # static_rnn.train_mnist()
+    # random_length_static_rnn_model()
+    static_rnn = StaticRNN(n_input, n_classes)
+    static_rnn.train_mnist()
     pass
 
