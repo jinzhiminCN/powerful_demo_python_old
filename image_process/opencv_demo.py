@@ -20,6 +20,7 @@ image_dir = os.path.join(resource_dir, "image_data")
 def test_show_image():
     """
     读取、显示以及保存图片。
+    注意：图片路径名称中最好不要出现汉字。
     :return:
     """
     image_file1 = os.path.join(image_dir, "demo1.png")
@@ -101,6 +102,37 @@ def convert_image_color():
     image_cvt5 = cv2.cvtColor(image_cvt3, cv2.COLOR_RGB2GRAY)
 
     images = [image1, image_cvt1, image_cvt2, image_cvt3, image_cvt4, image_cvt5]
+    pil_image_demo.plt_images(images)
+
+
+def test_threshold():
+    """
+    测试图像阈值。
+    :return:
+    """
+    image_file1 = os.path.join(image_dir, "demo1.png")
+    image1 = cv2.imread(image_file1)
+    # 把输入图像灰度化
+    image1 = cv2.cvtColor(image1, cv2.COLOR_BGR2RGB)
+    gray = cv2.cvtColor(image1, cv2.COLOR_RGB2GRAY)
+    # gray = cv2.cvtColor(image1, cv2.COLOR_BGR2GRAY)
+    # show_image(gray)
+
+    # 直接阈值化是对输入的单通道矩阵逐像素进行阈值分割。
+    ret, binary1 = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_TRIANGLE)
+    # show_image(binary)
+
+    # 自适应阈值化能够根据图像不同区域亮度分布，改变阈值
+    binary2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 25, 10)
+    # show_image(binary)
+
+    h, w = gray.shape[:2]
+    m = np.reshape(gray, [1, w*h])
+    mean = m.sum()/(w*h)
+    print("mean:", mean)
+    ret, binary3 = cv2.threshold(gray, mean, 255, cv2.THRESH_BINARY)
+    # show_image(binary)
+    images = [image1, gray, binary1, binary2, binary3]
     pil_image_demo.plt_images(images)
 
 
@@ -332,6 +364,8 @@ if __name__ == "__main__":
     # test_image_cut_makeborder()
     # test_image_trans()
     # test_video_capture()
-    test_canny_edge()
+    # test_canny_edge()
+    # test_show_image()
+    # test_threshold()
     pass
 
