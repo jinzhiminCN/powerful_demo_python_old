@@ -355,6 +355,37 @@ def test_watermark():
     add_watermark(image_file, content, image_watermark_file)
 
 
+def convert_binary(image, threshold=None):
+    """
+    图像二值化。
+    :param image:
+    :param threshold:
+    :return:
+    """
+    width, height = image.size
+    image_binary = Image.new("L", (width, height), color=255)
+
+    if threshold is None:
+        image_binary = image.convert("1")
+    else:
+        for i in range(width):
+            for j in range(height):
+                if image.getpixel((i, j)) > threshold:
+                    image_binary.putpixel((i, j), 255)
+                else:
+                    image_binary.putpixel((i, j), 0)
+    return image_binary
+
+
+def convert_gray(image):
+    """
+    图像转换为灰度图。
+    :param image:
+    :return:
+    """
+    return image.convert("L")
+
+
 if __name__ == "__main__":
     pass
     # test_open_image()
