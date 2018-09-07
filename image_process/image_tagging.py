@@ -35,6 +35,7 @@ KEY_RIGHT = 65363
 KEY_ESC = 27
 KEY_DELETE = 65535
 
+KEY_D = 100
 KEY_H = 104
 KEY_J = 106
 KEY_K = 107
@@ -266,6 +267,19 @@ class SimpleBBoxLabeling:
         self.export_bbox(bbox_file_path, self._bboxes)
         self._clean_bbox()
 
+    def _delete_current_sample(self):
+        """
+        删除当前标注框信息
+        :return:
+        """
+        filename = self._file_list[self._image_index]
+        file_path = os.sep.join([self._data_dir, filename])
+        file_path = get_bbox_name(file_path)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        self._filelist.pop(self._image_index)
+        print('{} is deleted!'.format(filename))
+
     def start(self):
         """
         开始OpenCV窗口循环的方法，定义程序的主逻辑。
@@ -280,7 +294,6 @@ class SimpleBBoxLabeling:
         # 所有标注物体名称的列表
         labels = self.label_colors.keys()
         labels = list(labels)
-        # print(labels)
 
         # 待标注物体的种类数
         n_labels = len(labels)
@@ -328,16 +341,16 @@ class SimpleBBoxLabeling:
                 self._image_index += 1
                 if self._image_index > len(self._file_list) - 1:
                     self._image_index = len(self._file_list) - 1
-            #
-            # # 删除当前图片和对应标注信息
-            # elif key == KEY_DELETE:
-            #     self._delete_current_sample()
-            #     key = KEY_EMPTY
-            #     continue
-            #
+
+            # 删除当前图片和对应标注信息
+            elif key == KEY_DELETE:
+                self._delete_current_sample()
+                key = KEY_EMPTY
+                continue
+
             # 如果键盘操作执行了换图片，则重新读取，更新图片
             filename = self._file_list[self._image_index]
-            print("filename:{0}, last_filename:{1}".format(filename, last_filename))
+            # print("filename:{0}, last_filename:{1}".format(filename, last_filename))
             if filename != last_filename:
                 file_path = os.sep.join([self._data_dir, filename])
                 self._img, self._bboxes = self.load_sample(file_path)
@@ -368,7 +381,6 @@ class SimpleBBoxLabeling:
         print('Labels updated!')
 
 if __name__ == '__main__':
-    # E:/images E:/test_data/ocr/photo
     image_dir = 'E:/images'
     labeling_task = SimpleBBoxLabeling(image_dir)
     labeling_task.start()
