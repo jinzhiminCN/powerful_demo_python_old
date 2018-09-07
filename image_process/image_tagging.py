@@ -5,6 +5,7 @@
 # ==============================================================================
 import os
 import cv2
+from PIL import Image
 
 
 # 定义标注窗口的默认名称
@@ -27,7 +28,7 @@ COLOR_BLUE = (0, 0, 255)
 BAR_HEIGHT = 16
 
 # 上下左右，ESC及删除键对应的cv.waitKey()的返回值
-# 注意这个值根据操作系统不同有不同，可以通过6.4.2中的代码获取
+# 注意这个值根据操作系统不同有不同，
 KEY_UP = 65362
 KEY_DOWN = 65364
 KEY_LEFT = 65361
@@ -277,7 +278,7 @@ class SimpleBBoxLabeling:
         file_path = get_bbox_name(file_path)
         if os.path.exists(file_path):
             os.remove(file_path)
-        self._filelist.pop(self._image_index)
+        self._file_list.pop(self._image_index)
         print('{} is deleted!'.format(filename))
 
     def start(self):
@@ -287,6 +288,8 @@ class SimpleBBoxLabeling:
         """
         # 之前标注的文件名，用于程序判断是否需要执行一次图像读取
         last_filename = ''
+        # 当前标注的文件名
+        filename = ''
 
         # 标注物体在列表中的下标
         label_index = 0
@@ -379,6 +382,59 @@ class SimpleBBoxLabeling:
         self.export_bbox(export_box_path, self._bboxes)
 
         print('Labels updated!')
+
+
+def crop_image_by_bbox(image_path, bbox_path, photo_result_dir):
+    """
+    根据bbox文件切分图像。
+    :param image_path: 原始图像路径
+    :param bbox_path: bbox路径
+    :param photo_result_dir: 切分图像目录
+    :return:
+    """
+    image_name = os.path.basename(image_path)
+    image_src = Image.open(image_path)
+    image_src = image_src.convert("L")
+
+    index = 0
+    with open(bbox_path, mode='r', encoding='utf-8') as label_file:
+        for line in label_file:
+            # 获取图像box
+            line = line.replace(" ", "").replace("(", "").replace(")", "")
+            line_split = line.split(",")
+            box = [int(x) for x in line_split[1:]]
+            index += 1
+
+            # 将标注方框不符合要求的过滤掉
+            left, top, right, bottom = box
+            if left >= right or top >= bottom:
+                continue
+
+            # 剪切图像
+            small_image = image_src.crop(box)
+
+            # 保存图像
+            small_image_name = "{0}_{1}.jpg".format(image_name[:-4], index)
+            small_image_path = os.path.join(photo_result_dir, small_image_name)
+            small_image.save(small_image_path)
+
+
+def image_crop(image_src_dir, image_dst_dir):
+    """
+    切分图像。
+    :param image_src_dir
+    :param image_dst_dir
+    :return:
+    """
+    for filename in os.listdir(image_src_dir):
+        if filename[-4:] == 'bbox':
+            continue
+        else:
+            image_path = os.path.join(image_src_dir, filename)
+            bbox_path = "{0}.bbox".format(image_path)
+            if os.path.exists(bbox_path):
+                crop_image_by_bbox(image_path, bbox_path, image_dst_dir)
+
 
 if __name__ == '__main__':
     image_dir = 'E:/images'
