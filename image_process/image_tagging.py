@@ -81,7 +81,7 @@ class SimpleBBoxLabeling:
 
         # 获取已经标注的文件列表和还未标注的文件列表
         image_files = [x for x in os.listdir(self._data_dir) if x[x.rfind('.') + 1:].lower() in SUPPORTED_FORMATS]
-        labeled = [x for x in image_files if os.path.exists(get_bbox_name(x))]
+        labeled = [x for x in image_files if os.path.exists(get_bbox_name(os.path.join(self._data_dir, x)))]
         to_be_labeled = [x for x in image_files if x not in labeled]
 
         # 每次打开一个文件夹，都自动从还未标注的第一张开始
@@ -141,6 +141,8 @@ class SimpleBBoxLabeling:
                     and 0 <= self._cur_box < len(self._bboxes):
                 self._bboxes.pop(self._cur_box)
                 self._cur_box = None
+            elif self._bboxes and self._cur_box is None:
+                self._bboxes.pop()
 
     def _clean_bbox(self):
         """
