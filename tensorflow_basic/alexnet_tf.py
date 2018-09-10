@@ -3,22 +3,11 @@
 # ==============================================================================
 # tensorflow AlexNet，一种比较经典的卷积神经网络。
 # ==============================================================================
-import tensorflow as tf
-import os
-import config.common_config as com_config
-from tensorflow.examples.tutorials.mnist import input_data
-from util.log_util import LoggerUtil
 from util.tensorflow_util import TensorFlowUtil
-
-# 日志器
-common_logger = LoggerUtil.get_common_logger()
-# mnist数据
-mnist = input_data.read_data_sets(com_config.MNIST_DIR, one_hot=True)
-n_input = 784  # MNIST data input (img shape: 28*28)
-n_classes = 10  # MNIST total classes (0-9 digits)
+from tensorflow_basic.base_dnn_tf import *
 
 
-class AlexNetTF(object):
+class AlexNetTF(BaseDNN):
     """
     简单的卷积神经网络结构。
     """
@@ -143,13 +132,6 @@ class AlexNetTF(object):
         self.w_full8 = TensorFlowUtil.weight_variable([1024, n_classes])
         self.b_full8 = TensorFlowUtil.bias_variable([n_classes])
 
-    def init_variables(self):
-        """
-        初始化变量。
-        :return:
-        """
-        self.initializer = tf.global_variables_initializer()
-
     def inference(self):
         """
         网络结构生成。
@@ -211,17 +193,6 @@ class AlexNetTF(object):
         """
         tf.summary.scalar("loss", self.loss)
         self.merged_summary_op = tf.summary.merge_all()
-
-    def train(self):
-        """
-        训练网络参数。
-        :return:
-        """
-        with tf.Session() as sess:
-            self.sess = sess
-            # 初始化
-            sess.run(self.initializer)
-            # 训练数据
 
     def train_mnist(self):
         """
