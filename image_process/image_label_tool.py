@@ -42,7 +42,7 @@ class LabelTool():
         self.pil_image = None
 
         # initialize mouse state
-        self.state = {}
+        self.state = {""}
         self.state['click'] = 0
         self.state['x'], self.state['y'] = 0, 0
 

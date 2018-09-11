@@ -80,7 +80,7 @@ class SimpleBBoxLabeling:
         self._cur_box = None
 
         # 如果有用户自定义的标注信息则读取，否则用默认的物体和颜色
-        label_path = '{}.labels'.format(self._data_dir)
+        label_path = os.path.join(self._data_dir, "labels.txt")
         self.label_colors = DEFAULT_COLOR if not os.path.exists(label_path) else self.load_labels(label_path)
 
         # 获取已经标注的文件列表和还未标注的文件列表
@@ -204,11 +204,14 @@ class SimpleBBoxLabeling:
     def load_labels(file_path):
         """
         加载物体及对应颜色信息的数据。
+        数据格式如下：
+        ('Cat'), (255, 0, 0)
+        ('Dog'), (0, 255, 0)
         :param file_path:
         :return:
         """
         label_colors = {}
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             line = f.readline().rstrip()
             while line:
                 label, color = eval(line)
@@ -254,7 +257,7 @@ class SimpleBBoxLabeling:
         :param file_path:
         :return:
         """
-        img = cv2.imread(file_path, cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(file_path, cv2.IMREAD_COLOR)
         bbox_file_path = get_bbox_name(file_path)
         bboxes = []
         if os.path.exists(bbox_file_path):
