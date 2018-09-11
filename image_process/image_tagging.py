@@ -1,7 +1,7 @@
 # -*- encoding:utf-8 -*-
 
 # ==============================================================================
-# 图像标注模块。使用open模块实现标注。
+# 图像标注模块。使用openCV模块实现标注。
 # ==============================================================================
 import os
 import cv2
@@ -72,6 +72,8 @@ class SimpleBBoxLabeling:
         self._cur_label = None
         # 当前标注的图像
         self._img = None
+        self._img_width = None
+        self._img_height = None
         # 当前图像对应的所有已标注框
         self._bboxes = []
         # 选中的标注框
@@ -281,6 +283,32 @@ class SimpleBBoxLabeling:
         self._file_list.pop(self._image_index)
         print('{} is deleted!'.format(filename))
 
+    def _adjust_box_position(self, direction='left'):
+        """
+        调整标注框的位置。
+        :param direction: 移动方向
+        :return:
+        """
+        label_name, box_pt = self._bboxes[self._cur_box]
+        pt0, pt1 = box_pt
+
+        if direction == 'up':
+            if pt0[1] > 1:
+                pt0, pt1 = (pt0[0], pt0[1] - 1), (pt1[0], pt1[1] - 1)
+                self._bboxes[self._cur_box] = (label_name, (pt0, pt1))
+        elif direction == "down":
+            if pt1[1] < self._img_height:
+                pt0, pt1 = (pt0[0], pt0[1] + 1), (pt1[0], pt1[1] + 1)
+                self._bboxes[self._cur_box] = (label_name, (pt0, pt1))
+        elif direction == "left":
+            if pt0[0] > 1:
+                pt0, pt1 = (pt0[0] - 1, pt0[1]), (pt1[0] - 1, pt1[1])
+                self._bboxes[self._cur_box] = (label_name, (pt0, pt1))
+        elif direction == "right":
+            if pt1[0] < self._img_height:
+                pt0, pt1 = (pt0[0] + 1, pt0[1]), (pt1[0] + 1, pt1[1])
+                self._bboxes[self._cur_box] = (label_name, (pt0, pt1))
+
     def start(self):
         """
         开始OpenCV窗口循环的方法，定义程序的主逻辑。
@@ -311,39 +339,55 @@ class SimpleBBoxLabeling:
 
         # 只要没有按下Esc键，就持续循环
         while key != KEY_ESC:
-            # 上下键(K, J)用于选择当前标注物体
+            # 上下键(K, J)用于选择当前标注物体，或者调整标注框高度
             if key == KEY_K:
-                if label_index == 0:
-                    pass
+                # 使用按键调整位置
+                if self._cur_box is not None:
+                    self._adjust_box_position("up")
                 else:
-                    label_index -= 1
-                    label_index = max(label_index, 0)
+                    if label_index == 0:
+                        pass
+                    else:
+                        label_index -= 1
+                        label_index = max(label_index, 0)
 
             elif key == KEY_J:
-                if label_index == n_labels - 1:
-                    pass
+                # 使用按键调整位置
+                if self._cur_box is not None:
+                    self._adjust_box_position("down")
                 else:
-                    label_index += 1
-                    label_index = min(label_index, len(labels))
+                    if label_index == n_labels - 1:
+                        pass
+                    else:
+                        label_index += 1
+                        label_index = min(label_index, len(labels))
 
             # 左右键(H, L)切换当前标注的图片
             elif key == KEY_H:
-                # 已经到了第一张图片的话就不需要清空上一张
-                if self._image_index > 0:
-                    self._export_n_clean_bbox()
+                # 使用按键调整位置
+                if self._cur_box is not None:
+                    self._adjust_box_position("left")
+                else:
+                    # 已经到了第一张图片的话就不需要清空上一张
+                    if self._image_index > 0:
+                        self._export_n_clean_bbox()
 
-                self._image_index -= 1
-                if self._image_index < 0:
-                    self._image_index = 0
+                    self._image_index -= 1
+                    if self._image_index < 0:
+                        self._image_index = 0
 
             elif key == KEY_L:
-                # 已经到了最后一张图片的话就不需要清空上一张
-                if self._image_index < len(self._file_list) - 1:
-                    self._export_n_clean_bbox()
+                # 使用按键调整位置
+                if self._cur_box is not None:
+                    self._adjust_box_position("right")
+                else:
+                    # 已经到了最后一张图片的话就不需要清空上一张
+                    if self._image_index < len(self._file_list) - 1:
+                        self._export_n_clean_bbox()
 
-                self._image_index += 1
-                if self._image_index > len(self._file_list) - 1:
-                    self._image_index = len(self._file_list) - 1
+                    self._image_index += 1
+                    if self._image_index > len(self._file_list) - 1:
+                        self._image_index = len(self._file_list) - 1
 
             # 删除当前图片和对应标注信息
             elif key == KEY_DELETE:
@@ -357,6 +401,7 @@ class SimpleBBoxLabeling:
             if filename != last_filename:
                 file_path = os.sep.join([self._data_dir, filename])
                 self._img, self._bboxes = self.load_sample(file_path)
+                self._img_width, self._img_height = self._img.shape[:2]
 
             # 更新当前标注物体名称
             self._cur_label = labels[label_index]
@@ -367,8 +412,8 @@ class SimpleBBoxLabeling:
             key = cv2.waitKey(delay)
 
             # 显示按键的id
-            if key != -1:
-                print("当前按键:{0}".format(key))
+            # if key != -1:
+            #     print("当前按键:{0}".format(key))
 
             # 当前文件名就是下次循环的老文件名
             last_filename = filename
