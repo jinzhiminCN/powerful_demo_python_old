@@ -126,6 +126,7 @@ def test_threshold():
     binary2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 25, 10)
     # show_image(binary)
 
+    # 根据平均像素值
     h, w = gray.shape[:2]
     m = np.reshape(gray, [1, w*h])
     mean = m.sum()/(w*h)
@@ -215,6 +216,33 @@ def test_image_flip():
 
     images = [img_copy, img_flip1, img_flip2, img_flip3]
     pil_image_demo.plt_images(images)
+
+
+def gray_transform(img):
+    """
+    将图像转换为灰度图片。
+    :param img:原始图像
+    :return:
+    """
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    return gray
+
+
+def hsv_transform(img, hue_delta, sat_mult, val_mult):
+    """
+    定义HSV变换函数。
+    :param img: 图像数据
+    :param hue_delta: 色调变化比例
+    :param sat_mult: 饱和度变化比例
+    :param val_mult: 明度变化比例
+    :return:
+    """
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float)
+    img_hsv[:, :, 0] = (img_hsv[:, :, 0] + hue_delta) % 180
+    img_hsv[:, :, 1] *= sat_mult
+    img_hsv[:, :, 2] *= val_mult
+    img_hsv[img_hsv > 255] = 255
+    return cv2.cvtColor(np.round(img_hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
 
 
 def gamma_trans(img, gamma):
@@ -365,7 +393,7 @@ if __name__ == "__main__":
     # test_image_trans()
     # test_video_capture()
     # test_canny_edge()
-    # test_show_image()
+    test_show_image()
     # test_threshold()
     pass
 
