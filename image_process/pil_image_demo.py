@@ -4,6 +4,7 @@
 # 测试PIL Image模块的相关方法。
 # ==============================================================================
 import os
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageEnhance
 import matplotlib.pyplot as plt
 import config.common_config as com_config
@@ -25,7 +26,7 @@ def test_open_image():
     :return:
     """
     # file_name = "china_mobile.tif"
-    file_name = "lena_gray.jpg"
+    file_name = "lena.jpg"
     # file_name = "demo1.png"
     image_file = os.path.join(image_dir, file_name)
     image = Image.open(image_file)
@@ -184,9 +185,11 @@ def print_image_pixel(image):
     width, height = image.size[0], image.size[1]
     for h in range(0, height):
         for w in range(0, width):
-            pixel = image.getpixel((w,h))
+            pixel = image.getpixel((w, h))
             if isinstance(pixel, (int, float)):
                 print("{0: >3}".format(pixel), end=" ")
+            else:
+                print("{0}".format(pixel), end=" ")
         print("")
 
 
@@ -317,7 +320,6 @@ def add_watermark(in_file, text, out_file='watermark.jpg', angle=23, opacity=0.2
     :param opacity: 透明度
     :return:
     """
-
     img = Image.open(in_file).convert('RGB')
     watermark = Image.new('RGBA', img.size, (0, 0, 0, 0))
 
@@ -355,6 +357,30 @@ def test_watermark():
     add_watermark(image_file, content, image_watermark_file)
 
 
+def convert_binary_by_histogram(image, ratio=0.95):
+    """
+    根据直方图来进行图像二值化。
+    :param image:
+    :param ratio: 像素值调整比例
+    :return:
+    """
+    height, width = image.size[:2]
+    img_size = height * width
+
+    # 获取直方图和平均像素值
+    img_histogram = image.histogram()
+    color_values = [x for x in range(len(img_histogram))]
+    np_histogram = np.array(img_histogram)
+    np_color_values = np.array(color_values)
+    img_color_sum = np.sum(np_histogram * np_color_values)
+    img_color_avg = img_color_sum / img_size
+
+    # 根据平均像素值进行二值化
+    img_binary = convert_binary(image, int(img_color_avg * ratio))
+
+    return img_binary
+
+
 def convert_binary(image, threshold=None):
     """
     图像二值化。
@@ -386,6 +412,81 @@ def convert_gray(image):
     return image.convert("L")
 
 
+def test_histogram():
+    """
+    测试图像的直方图。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "demo1.png")
+    image = Image.open(image_file)
+    image_histogram = image.histogram()
+    common_logger.info(image_histogram)
+
+    color_values = [x for x in range(len(image_histogram))]
+    common_logger.info(color_values)
+
+    plt.figure()
+    plt.plot(color_values, image_histogram)
+    plt.show()
+
+
+def show_histogram(image):
+    """
+    显示图像的颜色直方图分布。
+    :param image:
+    :return:
+    """
+    image_histogram = image.histogram()
+    color_values = [x for x in range(len(image_histogram))]
+
+    # 显示图像颜色的直方图
+    plt.figure()
+    plt.plot(color_values, image_histogram)
+    plt.show()
+
+
+def image_add_horizontal(image1, image2, blank_length=0):
+    """
+    将两张图片横向拼接。
+    :param image1: Image类型的图像
+    :param image2: Image类型的图像
+    :param blank_length: 图像间嵌入空白的长度
+    :return: 返回拼接成功的图像
+    """
+    if blank_length < 0:
+        blank_length = 0
+
+    width1, height1 = image1.size[0], image1.size[1]
+    width2, height2 = image2.size[0], image2.size[1]
+    width = width1 + width2 + blank_length
+    height = max(height1, height2)
+
+    image = Image.new("RGBA", (width, height), (255, 255, 255))
+    image.paste(image1, box=(0, 0, width1, height1))
+    image.paste(image2, box=(width1 + blank_length, 0, width, height2))
+
+    return image
+
+
+def image_add_vertical(image1, image2):
+    """
+    将两张图片纵向拼接。
+    :param image1: Image类型的图像
+    :param image2: Image类型的图像
+    :return: 返回拼接成功的图像
+    """
+    width1, height1 = image1.size[0], image1.size[1]
+    width2, height2 = image2.size[0], image2.size[1]
+    width = max(width1, width2)
+    height = height1 + height2
+
+    image = Image.new("RGBA", (width, height), (255, 255, 255))
+    image.paste(image1, box=(0, 0, width1, height1))
+    image.paste(image2, box=(0, height1, width2, height))
+
+    return image
+
+
 if __name__ == "__main__":
     pass
     # test_open_image()
@@ -398,6 +499,6 @@ if __name__ == "__main__":
     # test_image_merge()
     # test_crop_image()
     # test_thumbnail()
-    test_watermark()
-
+    # test_watermark()
+    test_histogram()
 
