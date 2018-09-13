@@ -67,6 +67,7 @@ def grad_descent(x_inputs, y_labels):
         y_predict = sigmoid(gradient)
         error = (y_predict - y_label_mat)
         theta -= alpha * x_input_mat.transpose() * error
+        # common_logger.info("step:{0}, theta:{1}".format(k, theta.flatten()))
     return theta
 
 
@@ -99,7 +100,7 @@ def stochastic_grad_descent(x_inputs, y_labels):
     return theta
 
 
-def smooth_stoc_grad_descent(x_inputs, y_labels):
+def smooth_stochastic_grad_descent(x_inputs, y_labels):
     """
     使用平滑的随机梯度下降计算theta。
     :param x_inputs:
@@ -170,18 +171,18 @@ def test_logistic_regression():
     :return:
     """
     x_inputs, y_labels = load_data_set()
-    # theta = grad_descent(x_inputs, y_labels)
-    # common_logger.info("theta:\n{0}".format(theta))
+    theta = grad_descent(x_inputs, y_labels)
+    common_logger.info("theta:\n{0}".format(theta))
 
-    # theta_stoch = stochastic_grad_descent(x_inputs, y_labels)
-    # common_logger.info("theta_stoch:\n{0}".format(theta_stoch))
+    # theta_stochastic = stochastic_grad_descent(x_inputs, y_labels)
+    # common_logger.info("theta_stochastic:\n{0}".format(theta_stoch))
 
-    theta_smooth_stoch = smooth_stoc_grad_descent(x_inputs, y_labels)
-    common_logger.info("theta_smooth_stoch:\n{0}".format(theta_smooth_stoch))
+    # theta_smooth_stochastic = smooth_stochastic_grad_descent(x_inputs, y_labels)
+    # common_logger.info("theta_smooth_stochastic:\n{0}".format(theta_smooth_stochastic))
 
     # theta_sk = logistic_regression_sk(x_inputs, y_labels)
 
-    theta_list = [theta_smooth_stoch]
+    theta_list = [theta]
     # 显示绘图
     plot_best_fit(theta_list)
 
