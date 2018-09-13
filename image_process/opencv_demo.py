@@ -218,46 +218,192 @@ def test_image_flip():
     pil_image_demo.plt_images(images)
 
 
-def gray_transform(img):
+class ImageEnhanceCV(object):
     """
-    将图像转换为灰度图片。
-    :param img:原始图像
-    :return:
+    OpenCV版的图像增强。
     """
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    return gray
+    @staticmethod
+    def crop_image(img, x0, y0, crop_width, crop_height):
+        """
+        图像裁剪函数。
+        :param img: ndarray格式的图像。
+        :param x0: 左上角横坐标x0
+        :param y0: 左上角纵坐标y0
+        :param crop_width: 裁剪宽度
+        :param crop_height: 裁剪高度
+        :return:
+        """
+        return img[y0:y0 + crop_height, x0:x0 + crop_width]
 
+    @staticmethod
+    def rotate_image(img, angle, crop):
+        """
+        图像旋转函数。
+        :param img: 原始图像
+        :param angle: 逆时针旋转的角度
+        :param crop: 布尔值，表示是否要裁剪去除黑边
+        :return:
+        """
+        h, w = img.shape[:2]
+        # 旋转角度的周期是360°
+        angle %= 360
+        # 用OpenCV内置函数计算仿射矩阵
+        m_rotate = cv2.getRotationMatrix2D((w / 2, h / 2), angle, 1)
+        # 得到旋转后的图像
+        img_rotated = cv2.warpAffine(img, m_rotate, (w, h))
 
-def hsv_transform(img, hue_delta, sat_mult, val_mult):
-    """
-    定义HSV变换函数。
-    :param img: 图像数据
-    :param hue_delta: 色调变化比例
-    :param sat_mult: 饱和度变化比例
-    :param val_mult: 明度变化比例
-    :return:
-    """
-    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float)
-    img_hsv[:, :, 0] = (img_hsv[:, :, 0] + hue_delta) % 180
-    img_hsv[:, :, 1] *= sat_mult
-    img_hsv[:, :, 2] *= val_mult
-    img_hsv[img_hsv > 255] = 255
-    return cv2.cvtColor(np.round(img_hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
+        # 如果需要裁剪去除黑边
+        if crop:
+            # 对于裁剪角度的等效周期是180°
+            angle_crop = angle % 180
 
+            # 并且关于90°对称
+            if angle_crop > 90:
+                angle_crop = 180 - angle_crop
 
-def gamma_trans(img, gamma):
-    """
-    定义Gamma矫正的函数。
-    :param img:
-    :param gamma:
-    :return:
-    """
-    # 具体做法是先归一化到1，然后gamma作为指数值求出新的像素值再还原
-    gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]
-    gamma_table = np.round(np.array(gamma_table)).astype(np.uint8)
+            # 转化角度为弧度
+            theta = angle_crop * np.pi / 180.0
 
-    # 实现这个映射用的是OpenCV的查表函数
-    return cv2.LUT(img, gamma_table)
+            # 计算高宽比
+            hw_ratio = float(h) / float(w)
+
+            # 计算裁剪边长系数的分子项
+            tan_theta = np.tan(theta)
+            numerator = np.cos(theta) + np.sin(theta) * tan_theta
+
+            # 计算分母项中和宽高比相关的项
+            r = hw_ratio if h > w else 1 / hw_ratio
+
+            # 计算分母项
+            denominator = r * tan_theta + 1
+            # 计算最终的边长系数
+            crop_mult = numerator / denominator
+
+            # 得到裁剪区域
+            w_crop = int(round(crop_mult * w))
+            h_crop = int(round(crop_mult * h))
+            x0 = int((w - w_crop) / 2)
+            y0 = int((h - h_crop) / 2)
+
+            img_rotated = ImageEnhanceCV.crop_image(img_rotated, x0, y0, w_crop, h_crop)
+
+        return img_rotated
+
+    @staticmethod
+    def gray_transform(img):
+        """
+        将图像转换为灰度图片。
+        :param img:原始图像
+        :return:
+        """
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        return gray
+
+    @staticmethod
+    def hsv_transform(img, hue_delta, sat_mult, val_mult):
+        """
+        定义HSV变换函数。
+        :param img: 原始图像
+        :param hue_delta: 色调变化比例
+        :param sat_mult: 饱和度变化比例
+        :param val_mult: 明度变化比例
+        :return:
+        """
+        img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV).astype(np.float)
+        img_hsv[:, :, 0] = (img_hsv[:, :, 0] + hue_delta) % 180
+        img_hsv[:, :, 1] *= sat_mult
+        img_hsv[:, :, 2] *= val_mult
+        img_hsv[img_hsv > 255] = 255
+        return cv2.cvtColor(np.round(img_hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
+
+    @staticmethod
+    def gamma_trans(img, gamma):
+        """
+        定义Gamma矫正的函数。
+        :param img: 原始图像
+        :param gamma:
+        :return:
+        """
+        # 具体做法是先归一化到1，然后gamma作为指数值求出新的像素值再还原
+        gamma_table = [np.power(x / 255.0, gamma) * 255.0 for x in range(256)]
+        gamma_table = np.round(np.array(gamma_table)).astype(np.uint8)
+
+        # 实现这个映射用的是OpenCV的查表函数
+        return cv2.LUT(img, gamma_table)
+
+    @staticmethod
+    def random_crop(img, area_ratio, hw_vari):
+        """
+        随机裁剪。
+        :param img: 原始图像
+        :param area_ratio: 为裁剪画面占原画面的比例
+        :param hw_vari: 是扰动占原高宽比的比例范围
+        :return:
+        """
+        h, w = img.shape[:2]
+        hw_delta = np.random.uniform(-hw_vari, hw_vari)
+        hw_mult = 1 + hw_delta
+
+        # 下标进行裁剪，宽高必须是正整数
+        w_crop = int(round(w * np.sqrt(area_ratio * hw_mult)))
+
+        # 裁剪宽度不可超过原图可裁剪宽度
+        if w_crop > w:
+            w_crop = w
+
+        h_crop = int(round(h * np.sqrt(area_ratio / hw_mult)))
+        if h_crop > h:
+            h_crop = h
+
+        # 随机生成左上角的位置
+        x0 = np.random.randint(0, w - w_crop + 1)
+        y0 = np.random.randint(0, h - h_crop + 1)
+
+        return ImageEnhanceCV.crop_image(img, x0, y0, w_crop, h_crop)
+
+    @staticmethod
+    def random_rotate(img, angle_vari, p_crop):
+        """
+        随机旋转。
+        :param img: 原始图像
+        :param angle_vari: 旋转角度的范围[-angle_vari, angle_vari)
+        :param p_crop: 要进行去黑边裁剪的比例
+        :return:
+        """
+
+        angle = np.random.uniform(-angle_vari, angle_vari)
+        crop = False if np.random.random() > p_crop else True
+        return ImageEnhanceCV.rotate_image(img, angle, crop)
+
+    @staticmethod
+    def random_hsv_transform(img, hue_vari, sat_vari, val_vari):
+        """
+        随机hsv变换。
+        :param img: 原始图像
+        :param hue_vari: 色调变化比例的范围
+        :param sat_vari: 饱和度变化比例的范围
+        :param val_vari: 明度变化比例的范围
+        :return:
+        """
+
+        hue_delta = np.random.randint(-hue_vari, hue_vari)
+        sat_mult = 1 + np.random.uniform(-sat_vari, sat_vari)
+        val_mult = 1 + np.random.uniform(-val_vari, val_vari)
+        return ImageEnhanceCV.hsv_transform(img, hue_delta, sat_mult, val_mult)
+
+    @staticmethod
+    def random_gamma_transform(img, gamma_vari):
+        """
+        随机gamma变换。
+        :param img: 原始图像
+        :param gamma_vari: Gamma变化的范围[1/gamma_vari, gamma_vari)
+        :return:
+        """
+
+        log_gamma_vari = np.log(gamma_vari)
+        alpha = np.random.uniform(-log_gamma_vari, log_gamma_vari)
+        gamma = np.exp(alpha)
+        return ImageEnhanceCV.gamma_transform(img, gamma)
 
 
 def test_image_trans():
@@ -270,7 +416,7 @@ def test_image_trans():
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     height, width, dim = img.shape
     # 执行Gamma矫正，小于1的值让暗部细节大量提升，同时亮部细节少量提升
-    img_gamma = gamma_trans(img, 0.5)
+    img_gamma = ImageEnhanceCV.gamma_trans(img, 0.5)
 
     # 沿着横纵轴放大1.6倍，然后平移(-150,-240)，最后沿原图大小截取，等效于裁剪并放大
     m_crop = np.array([
