@@ -9,7 +9,10 @@ import os
 import time
 from image_process import pil_image_demo
 import config.common_config as com_config
+from util.log_util import LoggerUtil
 
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
@@ -370,7 +373,6 @@ class ImageEnhanceCV(object):
         :param p_crop: 要进行去黑边裁剪的比例
         :return:
         """
-
         angle = np.random.uniform(-angle_vari, angle_vari)
         crop = False if np.random.random() > p_crop else True
         return ImageEnhanceCV.rotate_image(img, angle, crop)
@@ -385,7 +387,6 @@ class ImageEnhanceCV(object):
         :param val_vari: 明度变化比例的范围
         :return:
         """
-
         hue_delta = np.random.randint(-hue_vari, hue_vari)
         sat_mult = 1 + np.random.uniform(-sat_vari, sat_vari)
         val_mult = 1 + np.random.uniform(-val_vari, val_vari)
@@ -399,7 +400,6 @@ class ImageEnhanceCV(object):
         :param gamma_vari: Gamma变化的范围[1/gamma_vari, gamma_vari)
         :return:
         """
-
         log_gamma_vari = np.log(gamma_vari)
         alpha = np.random.uniform(-log_gamma_vari, log_gamma_vari)
         gamma = np.exp(alpha)
@@ -446,6 +446,31 @@ def test_image_trans():
     # show images
     images = [img, img_gamma, img_crop, img_sheared, img_rotated]
     pil_image_demo.plt_images(images)
+
+
+def test_image_enhance():
+    """
+    测试图像增强。
+    :return:
+    """
+    # demo1.png
+    image_file = os.path.join(image_dir, "lena_gray.jpg")
+    img = cv2.imread(image_file)
+
+    for h in range(0, 180, 20):
+        common_logger.info("{0}".format(h))
+        img_enhance = ImageEnhanceCV.hsv_transform(img, h, 1, 1)
+        show_image(img_enhance)
+
+    # for s in range(0, 20, 1):
+    #     common_logger.info("{0}".format(s))
+    #     img_enhance = ImageEnhanceCV.hsv_transform(img, 0, s*0.1, 1)
+    #     show_image(img_enhance)
+
+    # for v in range(0, 20, 1):
+    #     common_logger.info("{0}".format(v))
+    #     img_enhance = ImageEnhanceCV.hsv_transform(img, 0, 1, v*0.1)
+    #     show_image(img_enhance)
 
 
 def test_video_capture():
@@ -539,7 +564,8 @@ if __name__ == "__main__":
     # test_image_trans()
     # test_video_capture()
     # test_canny_edge()
-    test_show_image()
+    # test_show_image()
     # test_threshold()
+    test_image_enhance()
     pass
 
