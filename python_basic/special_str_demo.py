@@ -6,6 +6,11 @@
 import uuid
 import base64
 import hashlib
+from util.log_util import LoggerUtil
+
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
+
 
 def test_uuid():
     """
@@ -81,9 +86,9 @@ def test_hashlib():
     sha1.update('python hashlib?'.encode('utf-8'))
     print(sha1.hexdigest())
 
+
 if __name__ == "__main__":
     pass
     # test_uuid()
     # test_base64()
-    test_hashlib()
-
+    # test_hashlib()

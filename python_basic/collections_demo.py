@@ -6,7 +6,10 @@
 import time
 import sys
 from collections import namedtuple, deque, defaultdict, OrderedDict, Counter
+from util.log_util import LoggerUtil
 
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 # =========================== 全局常量 ===========================
 default_time_format = '%Y-%m-%d %H:%M:%S'
 
@@ -52,7 +55,7 @@ def test_dequeue():
     fancy_loading = deque('>-------Hello-------------')
 
     while True:
-        print('\r%s' % ''.join(fancy_loading))
+        print('\r{}'.format(''.join(fancy_loading)))
         fancy_loading.rotate(1)
         sys.stdout.flush()
         time.sleep(0.08)
@@ -63,10 +66,10 @@ def test_counter():
     测试counter的方法。
     :return:
     """
-    c = Counter()
+    count = Counter()
     for ch in 'programming':
-        c[ch] += 1
-    print(c)
+        count[ch] += 1
+    print(count)
 
     # 频率测试
     s = '''A Counter is a dict subclass for counting hashable objects. It is an unordered collection
@@ -74,9 +77,9 @@ def test_counter():
         Counts are allowed to be any integer value including zero or negative counts.
         The Counter class is similar to bags or multisets in other languages.'''.lower()
 
-    c = Counter(s)
+    count = Counter(s)
     # 获取出现频率最高的5个字符
-    print("出现频率最高的5个字符：{0}".format(c.most_common(5)))
+    print("出现频率最高的5个字符：{0}".format(count.most_common(5)))
 
 
 def test_ordered_dict():
@@ -105,8 +108,8 @@ def test_ordered_dict():
 def test_default_dict():
     """
     在使用Python原生的数据结构dict的时候，如果用 d[key] 访问， 当指定的key不存在时，是会抛出KeyError异常的。
-    但是，如果使用defaultdict，只要传入一个默认的工厂方法，那么请求一个不存在的key时，便会调用这个工厂方法使用其结果来作为这个key的
-    默认值。
+    但是，如果使用defaultdict，只要传入一个默认的工厂方法，那么请求一个不存在的key时，
+    便会调用这个工厂方法使用其结果来作为这个key的默认值。
     :return:
     """
     dd = defaultdict(lambda: 'N/A')
@@ -118,8 +121,8 @@ def test_default_dict():
 if __name__ == "__main__":
     pass
     # test_namedtuple()
-    # test_dequeue()
+    test_dequeue()
     # test_counter()
     # test_ordered_dict()
-    test_default_dict()
+    # test_default_dict()
 

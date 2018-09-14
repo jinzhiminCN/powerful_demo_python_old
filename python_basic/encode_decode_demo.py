@@ -5,6 +5,11 @@
 # 汉字编码 https://www.qqxiuzi.cn/zh/hanzi-unicode-bianma.php
 # ==============================================================================
 
+from util.log_util import LoggerUtil
+
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
+
 chinese_code_dict = {
     "基本汉字": "4E00-9FA5",
     "基本汉字补充": "9FA6-9FEF",
@@ -180,14 +185,14 @@ def full_to_half_width(uchar):
 
 def str_full_to_half(ustring):
     """
-    把字符串全角转半角
+    把字符串全角转半角。
     """
     return "".join([full_to_half_width(uchar) for uchar in ustring])
 
 
 def uniform(ustring):
     """
-    格式化字符串，完成全角转半角，大写转小写的工作
+    格式化字符串，完成全角转半角，大写转小写的工作。
     """
     return str_full_to_half(ustring).lower()
 
