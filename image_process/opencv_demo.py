@@ -320,7 +320,7 @@ class ImageEnhanceCV(object):
         return cv2.cvtColor(np.round(img_hsv).astype(np.uint8), cv2.COLOR_HSV2BGR)
 
     @staticmethod
-    def gamma_trans(img, gamma):
+    def gamma_transform(img, gamma):
         """
         定义Gamma矫正的函数。
         :param img: 原始图像
@@ -416,7 +416,7 @@ def test_image_trans():
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     height, width, dim = img.shape
     # 执行Gamma矫正，小于1的值让暗部细节大量提升，同时亮部细节少量提升
-    img_gamma = ImageEnhanceCV.gamma_trans(img, 0.5)
+    img_gamma = ImageEnhanceCV.gamma_transform(img, 0.5)
 
     # 沿着横纵轴放大1.6倍，然后平移(-150,-240)，最后沿原图大小截取，等效于裁剪并放大
     m_crop = np.array([
@@ -478,7 +478,7 @@ def test_video_capture():
     测试视频捕获。
     :return:
     """
-    interval = 60  # 捕获图像的间隔，单位：秒
+    # interval = 60  # 捕获图像的间隔，单位：秒
     num_frames = 100  # 捕获图像的总帧数
     out_fps = 24  # 输出文件的帧率
 
@@ -553,6 +553,27 @@ def test_canny_edge():
     pil_image_demo.plt_images(images)
 
 
+def test_contours():
+    """
+    根据图片的灰度计算轮廓并显示。
+    :return:
+    """
+    image_file = os.path.join(image_dir, "contour_cut.jpg")
+    img = cv2.imread(image_file)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    ret, binary = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+    image_value, contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(img, contours, -1, (0, 0, 255), 3)
+
+    cv2.imshow("img", img)
+
+    for i, cnt in enumerate(contours):
+        x, y, w, h = cv2.boundingRect(cnt)
+        common_logger.info("contour {0}: (x, y)=({1}, {2}), width={3}, height={4}".format(i, x, y, w, h))
+
+    cv2.waitKey(0)
+
 if __name__ == "__main__":
     # show_image()
     # plot_images()
@@ -566,6 +587,7 @@ if __name__ == "__main__":
     # test_canny_edge()
     # test_show_image()
     # test_threshold()
-    test_image_enhance()
+    # test_image_enhance()
+    test_contours()
     pass
 
