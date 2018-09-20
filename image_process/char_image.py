@@ -194,12 +194,20 @@ def png2gif(dir_name):
     imageio.mimsave(gif_name, images, "GIF", duration=DURARION)
 
 
-if __name__ == "__main__":
-    # test_char_image()
+def test_gif_char_image():
+    """
+    测试gif转换为字符图像。
+    :return:
+    """
     image_name = 'ce86fd8f5e8e75ab4a914c15ecd1e443.gif'
     image_path = os.path.join(image_dir, image_name)
     gif2png(image_path)
     dir_path = os.path.join(image_dir, "cache")
     png2gif(dir_path)
+
+
+if __name__ == "__main__":
+    # test_char_image()
+    test_gif_char_image()
     pass
 
