@@ -140,11 +140,23 @@ def test_match_search():
     common_logger.info(re.search('^X', 'A\nB\nX', re.MULTILINE))
 
 
+def test_group():
+    """
+    测试分组。
+    :return:
+    """
+    matcher = re.match(r"(?P<first_name>\w+) (?P<last_name>\w+)", "Malcolm Reynolds")
+    common_logger.info("<first_name>:{0}".format(matcher.group('first_name')))
+    common_logger.info("<last_name>:{0}".format(matcher.group('last_name')))
+    common_logger.info("group 1:{0}".format(matcher.group(1)))
+    common_logger.info("group 2:{0}".format(matcher.group(2)))
+
+
 if __name__ == "__main__":
     # test_forward_backward()
     # test_traceback()
     # test_re()
-    test_match_search()
+    # test_match_search()
     pass
-
+    test_group()
 
