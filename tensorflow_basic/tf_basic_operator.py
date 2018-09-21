@@ -313,9 +313,10 @@ def test_expand_dims():
     测试tf.expand_dims方法。扩充维度。
     :return:
     """
-    t1 = tf.constant([1, 2, 3])
-    t2 = tf.constant([4, 5, 6])
-    # concated = tf.concat(1, [t1,t2])这样会报错，tf.concat不会更改tensor的维度。
+    # t1 = tf.constant([1, 2, 3])
+    # t2 = tf.constant([4, 5, 6])
+    # 这样会报错，tf.concat不会更改tensor的维度。
+    # concated = tf.concat(1, [t1, t2])
     t3 = tf.expand_dims(tf.constant([1, 2, 3]), 1)
     t4 = tf.expand_dims(tf.constant([4, 5, 6]), 1)
     t_concate = tf.concat([t3, t4], 1)
@@ -637,6 +638,25 @@ def test_flatten():
     test_run_sess("flatten_x3", flatten_x3)
 
 
+def test_embedding():
+    """
+    测试embedding操作。
+    :return:
+    """
+    input_ids = tf.placeholder(dtype=tf.int32, shape=[None])
+    # identity embedding
+    embedding = tf.Variable(np.identity(5, dtype=np.int32))
+    # random embedding
+    mat = [[0, 1, 2], [3, 2, 1], [4, 2, 1], [0, 3, 4]]
+    embedding = tf.Variable(np.asarray(mat))
+    input_embedding = tf.nn.embedding_lookup(embedding, input_ids)
+    sess = tf.InteractiveSession()
+    sess.run(tf.global_variables_initializer())
+    common_logger.info("embedding:\n{0}".format(embedding.eval()))
+    input_embedding_value = sess.run(input_embedding, feed_dict={input_ids: [1, 2, 3, 0, 3, 2, 1]})
+    common_logger.info("input_embedding:\n{0}".format(input_embedding_value))
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -654,7 +674,8 @@ if __name__ == "__main__":
     # test_conv2d()
     # test_conv2d_transpose()
     # test_average_pooling_1d()
-    test_average_pooling_2d()
+    # test_average_pooling_2d()
     # test_average_pooling_3d()
+    test_embedding()
     pass
 
