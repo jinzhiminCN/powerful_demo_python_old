@@ -14,7 +14,7 @@ from util.log_util import LoggerUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
-ptb_data_path = 'E:/test_data/simple-examples/data'
+ptb_data_path = './data'
 
 
 def _read_words(filename):
@@ -29,7 +29,7 @@ def _read_words(filename):
 
 def _build_vocab(filename):
     """
-
+    构建词典，单词和单词id的对应关系。
     :param filename:
     :return:
     """
@@ -46,7 +46,7 @@ def _build_vocab(filename):
 
 def _file_to_word_ids(filename, word_to_id):
     """
-    文件转换为单词id。
+    文件内容转换为单词id的序列。
     :param filename:
     :param word_to_id:
     :return:
@@ -131,7 +131,7 @@ def test_ptb_raw_data():
     测试读取ptb原始数据。
     :return:
     """
-    tmp_dir = 'E:/test_data/simple-examples/data2'
+    tmp_dir = './data2'
     _string_data = "\n".join(
         [" hello there i am",
          " rain as day",
@@ -159,6 +159,6 @@ def test_ptb_iterator():
 
 if __name__ == '__main__':
     pass
-    # test_reader()
-    test_ptb_iterator()
+    test_reader()
+    # test_ptb_iterator()
     # test_ptb_raw_data()

@@ -35,11 +35,18 @@ import sys
 sys.stdout = sys.stderr
 import tensorflow as tf
 import numpy as np
-import nlp_basic.ptb_demo.ptb_reader
+import nlp_basic.ptb_demo.ptb_reader as ptb_reader
+from util.log_util import LoggerUtil
+
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 
 
 flags = tf.flags
 logging = tf.logging
+
+data_path = "./data/"
+save_path = data_path
 
 flags.DEFINE_string("model", "small",
                     "A type of model. Possible options are: small, medium, large.")
@@ -48,8 +55,8 @@ flags.DEFINE_bool('debug', False, 'More debug info in Tensorboard')
 flags.DEFINE_string('cost_function', 'default', 'Which cost function to use')
 flags.DEFINE_string('optimizer', 'GradientDescentOptimizer', 'Which optimizer to use')
 flags.DEFINE_bool('non_rnn_in_fp32', True, 'Perform non-rnn layers in fp32')
-flags.DEFINE_string("data_path", None, "Where the training/test data is stored.")
-flags.DEFINE_string("save_path", None, "Model output directory.")
+flags.DEFINE_string("data_path", data_path, "Where the training/test data is stored.")
+flags.DEFINE_string("save_path", save_path, "Model output directory.")
 flags.DEFINE_float("reg_term", 0.0, "L2 regularization of parameters")
 flags.DEFINE_float("init_scale", 0.0, "initialization for weights will be [-init_scale, init_scale]")
 flags.DEFINE_float("initial_lr", 0.0, "learning rate for 0 epoch")
@@ -73,17 +80,29 @@ class SmallConfig(object):
     """
     Small config.
     """
+    # 网络中权重值的初始scale
     init_scale = 0.1
+    # 学习率的初始值
     learning_rate = 1.0
+    # 梯度的最大范数
     max_grad_norm = 5
+    # LSTM堆叠的层数
     num_layers = 2
+    # LSTM反向传播的展开步数
     num_steps = 20
+    # LSTM内的隐含节点数
     hidden_size = 200
+    # 初始学习率可训练的轮次
     max_epoch = 4
+    # 总共可训练的轮次
     max_max_epoch = 13
+    # dropout层保留节点的比例
     keep_prob = 1.0
+    # 学习率的衰减速度
     lr_decay = 0.5
+    # 每个batch中样本的数量
     batch_size = 20
+    # 词汇总数
     vocab_size = 10000
 
 
@@ -223,7 +242,7 @@ class PTBModel(object):
         # 超参数
         self.batch_size = batch_size = config.batch_size
         self.num_steps = num_steps = config.num_steps
-        self.size = size = config.hidden_size
+        self.hidden_size = hidden_size = config.hidden_size
         vocab_size = config.vocab_size
         self.num_layers = config.num_layers
 
@@ -231,7 +250,9 @@ class PTBModel(object):
         self._input_data = tf.placeholder(tf.int32, [batch_size, num_steps])
         self._targets = tf.placeholder(tf.int32, [batch_size, num_steps])
 
-        embedding = tf.get_variable("embedding", [vocab_size, size], dtype=data_type(is_lstm_layer=False))
+        # embedding矩阵，其行数与词数量相同，其列数（单词向量表示的维数）与LSTM的隐藏节点数相同
+        embedding = tf.get_variable("embedding", [vocab_size, hidden_size], dtype=data_type(is_lstm_layer=False))
+        # 将输入的每个单词转换为对应的向量表示
         inputs = tf.nn.embedding_lookup(embedding, self._input_data, name="inputs_to_rnn")
 
         if debug:
@@ -240,13 +261,14 @@ class PTBModel(object):
         if is_training and config.keep_prob < 1:
             inputs = tf.nn.dropout(inputs, config.keep_prob)
 
-        rnn = CudnnLSTM(config.num_layers, size, size, input_mode='linear_input', direction='unidirectional',
-                        dropout=config.keep_prob, seed=0, seed2=0)
+        # CudnnLSTM
+        rnn = CudnnLSTM(config.num_layers, hidden_size, hidden_size, input_mode='linear_input',
+                        direction='unidirectional', dropout=config.keep_prob, seed=0)
         params_size_t = rnn.params_size()
         self._initial_input_h = tf.placeholder(data_type(is_lstm_layer=True),
-                                               shape=[config.num_layers, batch_size, size])
+                                               shape=[config.num_layers, batch_size, hidden_size])
         self._initial_input_c = tf.placeholder(data_type(is_lstm_layer=True),
-                                               shape=[config.num_layers, batch_size, size])
+                                               shape=[config.num_layers, batch_size, hidden_size])
 
         # 变量
         self.params = tf.Variable(
@@ -254,27 +276,31 @@ class PTBModel(object):
                               dtype=data_type(is_lstm_layer=True)), validate_shape=False)
         self.params_size_t = rnn.params_size()
 
+        # rnn模型
         outputs, output_h, output_c = rnn(is_training=is_training,
                                           input_data=tf.transpose(tf.cast(inputs, dtype=data_type(is_lstm_layer=True)),
-                                                                  [1, 0, 2]), input_h=self.input_h,
+                                                                  [1, 0, 2]),
+                                          input_h=self.input_h,
                                           input_c=self.input_c, params=self.params)
 
         self._output_h = output_h
         self._output_c = output_c
 
-        output = tf.reshape(tf.concat(values=tf.transpose(outputs, [1, 0, 2]), axis=1), [-1, size])
+        output = tf.reshape(tf.concat(values=tf.transpose(outputs, [1, 0, 2]), axis=1), [-1, hidden_size])
 
         if debug:
             variable_summaries(output, 'multiRNN_output')
 
-        softmax_w = tf.get_variable("softmax_w", [size, vocab_size], dtype=data_type(is_lstm_layer=False))
+        softmax_w = tf.get_variable("softmax_w", [hidden_size, vocab_size], dtype=data_type(is_lstm_layer=False))
         softmax_b = tf.get_variable("softmax_b", [vocab_size], dtype=data_type(is_lstm_layer=False))
-        logits = tf.matmul(output if output.dtype == data_type(is_lstm_layer=False)
-                           else tf.cast(output, data_type(is_lstm_layer=False)), softmax_w) + softmax_b
+        rnn_output = output if output.dtype == data_type(is_lstm_layer=False) \
+            else tf.cast(output, data_type(is_lstm_layer=False))
+        logits = tf.matmul(rnn_output, softmax_w) + softmax_b
 
         if debug:
             variable_summaries(logits, 'logits')
 
+        # 损失函数
         loss = sequence_loss_by_example(
             [logits],
             [tf.reshape(self._targets, [-1])],
@@ -286,10 +312,10 @@ class PTBModel(object):
         else:
             self._cost_to_optimize = cost_to_optimize = cost
 
-        tvars = tf.trainable_variables()
-        for v in tvars:
-            cost_to_optimize += FLAGS.reg_term * tf.cast(tf.nn.l2_loss(v), dtype=data_type(False)) / (
-            batch_size * config.num_steps)
+        t_vars = tf.trainable_variables()
+        for v in t_vars:
+            cost_to_optimize += FLAGS.reg_term * tf.cast(tf.nn.l2_loss(v), dtype=data_type(False)) / \
+                                (batch_size * config.num_steps)
             self._cost_to_optimize = cost_to_optimize
 
         if debug:
@@ -308,36 +334,37 @@ class PTBModel(object):
 
         # tvars = tf.trainable_variables()
         type2vars = dict()
-        print("**************************")
-        print("Trainable Variables")
-        print("**************************")
-        for var in tvars:
-            print('Variable name: %s. With dtype: %s and shape: %s' % (var.name, var.dtype, var.get_shape()))
+        common_logger.info("**************************")
+        common_logger.info("Trainable Variables")
+        common_logger.info("**************************")
+        for var in t_vars:
+            common_logger.info('Variable name: {0}. With dtype: {1} and shape: {2}'.
+                               format(var.name, var.dtype, var.get_shape()))
             if var.dtype not in type2vars:
                 type2vars[var.dtype] = [var]
             else:
                 type2vars[var.dtype].append(var)
 
-        print("**************************")
-        print("Gradients Variables")
-        print("**************************")
-        _grads = tf.gradients(cost_to_optimize, tvars)
+        common_logger.info("**************************")
+        common_logger.info("Gradients Variables")
+        common_logger.info("**************************")
+        _grads = tf.gradients(cost_to_optimize, t_vars)
         type2grads = dict()
         for g in _grads:
-            print('Gradient name: %s. With dtype: %s' % (g.name, g.dtype))
+            common_logger.info('Gradient name: {0}. With dtype: {1}'.format(g.name, g.dtype))
             if g.dtype not in type2grads:
                 type2grads[g.dtype] = [g]
             else:
                 type2grads[g.dtype].append(g)
 
-        type2clippedGrads = dict()
+        type2clipped_grads = dict()
         for dtype in type2grads:
-            cgrads, _ = tf.clip_by_global_norm(type2grads[dtype], config.max_grad_norm)
-        type2clippedGrads[dtype] = cgrads
+            c_grads, _ = tf.clip_by_global_norm(type2grads[dtype], config.max_grad_norm)
+        type2clipped_grads[dtype] = c_grads
 
         if debug:
-            for (gkey, vkey) in zip(type2clippedGrads.keys(), type2vars.keys()):
-                for (clipped_gradient, variable) in zip(type2clippedGrads[gkey], type2vars[vkey]):
+            for (g_key, v_key) in zip(type2clipped_grads.keys(), type2vars.keys()):
+                for (clipped_gradient, variable) in zip(type2clipped_grads[g_key], type2vars[v_key]):
                     variable_summaries(clipped_gradient, "clipped_dcost/d" + variable.name)
                     variable_summaries(variable, variable.name)
 
@@ -352,16 +379,16 @@ class PTBModel(object):
         else:
             optimizer = tf.train.GradientDescentOptimizer(self._lr)
 
-        allgrads = []
-        allvars = []
-        for dtype in type2clippedGrads:
-            allgrads += type2clippedGrads[dtype]
+        all_grads = []
+        all_vars = []
+        for dtype in type2clipped_grads:
+            all_grads += type2clipped_grads[dtype]
 
         # WARNING: key order assumption
         for dtype in type2vars:
-            allvars += type2vars[dtype]
+            all_vars += type2vars[dtype]
 
-        self._train_op = optimizer.apply_gradients(zip(allgrads, allvars))
+        self._train_op = optimizer.apply_gradients(zip(all_grads, all_vars))
 
         self._new_lr = tf.placeholder(dtype=data_type(False), shape=[], name="new_learning_rate")
         self._lr_update = tf.assign(self._lr, self._new_lr)
@@ -415,5 +442,139 @@ class PTBModel(object):
         return self._train_op
 
 
+def run_epoch(session, model, data, eval_op=None, verbose=False, epoch_ind=0):
+    """
+    Runs the model on the given data.
+    """
+    start_time = time.time()
+    epoch_size = ((len(data) // model.batch_size) - 1) // model.num_steps
+    costs = 0.0
+    iters = 0
+    if eval_op is not None:
+        fetches = [model.cost, model.output_h, model.output_c, eval_op]
+    else:
+        fetches = [model.cost, model.output_h, model.output_c]
+
+    h = np.zeros(shape=(model.num_layers, model.batch_size, model.size), dtype=np.float32)
+    c = np.zeros(shape=(model.num_layers, model.batch_size, model.size), dtype=np.float32)
+
+    for step, (x, y) in enumerate(ptb_reader.ptb_iterator(data, model.batch_size, model.num_steps)):
+        feed_dict = dict()
+        feed_dict[model.input_data] = x
+        feed_dict[model.targets] = y
+        feed_dict[model.input_c] = c
+        feed_dict[model.input_h] = h
+
+        if eval_op is not None:
+            cost, h, c, _ = session.run(fetches, feed_dict)
+        else:
+            cost, h, c = session.run(fetches, feed_dict)
+
+        costs += cost
+        iters += model.num_steps
+
+        if verbose and step % (epoch_size // 10) == 10:
+            common_logger.info("{0:.3f} perplexity: {1:.3f} speed: {2:0>3} wps".format(
+                  (step * 1.0 / epoch_size, np.exp(costs / iters),
+                   iters * model.batch_size / (time.time() - start_time))))
+
+    common_logger.info(("TOTAL EPOCH TIME: {0:.3f} seconds".format(time.time() - start_time)))
+    return np.exp(costs / iters)
+
+
+def main():
+    if not FLAGS.data_path:
+        raise ValueError("Must set --data_path to PTB data directory")
+
+    raw_data = ptb_reader.ptb_raw_data(FLAGS.data_path)
+    train_data, valid_data, test_data, _ = raw_data
+
+    config = get_config()
+    eval_config = get_config()
+    eval_config.batch_size = 1
+    eval_config.num_steps = 1
+
+    with tf.Graph().as_default():
+        tf.set_random_seed(FLAGS.gseed)
+        if FLAGS.init_scale != 0.0:
+            initializer = tf.random_uniform_initializer(-1*FLAGS.init_scale,
+                                                        FLAGS.init_scale)
+        else:
+            initializer = tf.random_uniform_initializer(-config.init_scale,
+                                                        config.init_scale)
+        with tf.name_scope("Train"):
+            with tf.variable_scope("Model", reuse=None, initializer=initializer):
+                m_train = PTBModel(is_training=True, config=config, debug=FLAGS.debug)
+            tf.summary.scalar("Learning Rate", m_train.lr)
+
+        with tf.name_scope("Valid"):
+            with tf.variable_scope("Model", reuse=True, initializer=initializer):
+                m_valid = PTBModel(is_training=False, config=config)
+
+        per_epoch_train_loss_update = tf.placeholder(tf.float32, shape=[])
+        per_epoch_train_loss = tf.Variable(float("inf"), dtype=tf.float32,
+                                           trainable=False, name='Epoch_train_loss', validate_shape=False)
+        tf.summary.scalar("Training Perplexity", per_epoch_train_loss)
+        per_epoch_train_loss_update_op = tf.assign(per_epoch_train_loss, per_epoch_train_loss_update)
+
+        per_epoch_valid_loss_update = tf.placeholder(tf.float32, shape=[])
+        per_epoch_valid_loss = tf.Variable(float("inf"), dtype=tf.float32, trainable=False,
+                                           name='Epoch_train_loss', validate_shape=False)
+        tf.summary.scalar("Validation Perplexity", per_epoch_valid_loss)
+        per_epoch_valid_loss_update_op = tf.assign(per_epoch_valid_loss, per_epoch_valid_loss_update)
+        #
+
+        summary = tf.summary.merge_all()
+
+        prev_validation_error = float("inf")
+        validation_err_went_up_counter = 0
+        saver = tf.train.Saver()
+        sv = tf.train.Supervisor(logdir=FLAGS.save_path, is_chief=True,
+                                 save_model_secs=0, saver=saver, save_summaries_secs=0) #
+        if FLAGS.initial_lr != 0.0:  # we'll do 0 epoch
+            e_range = [-1] + range(config.max_max_epoch)
+        else:
+            e_range = range(config.max_max_epoch)
+        path_to_latest_checkpoint = ""
+
+        with tf.Session() as session:
+            for i in e_range:
+                if i != -1:
+                    lr_decay = config.lr_decay ** max(i - config.max_epoch, 0.0)
+                    m_train.assign_lr(session, config.learning_rate * lr_decay)
+                else:  # very first epoch
+                    m_train.assign_lr(session, FLAGS.initial_lr)
+
+                common_logger.info("Epoch: {0} Learning rate: {1:.8f}".format(i + 1, session.run(m_train.lr)))
+                train_perplexity = run_epoch(session, m_train, train_data,
+                                             eval_op=m_train.train_op, verbose=True, epoch_ind=i)
+
+                common_logger.info("Epoch: {0} Train Perplexity: {1:.3f}".format(i + 1, train_perplexity))
+                valid_perplexity = run_epoch(session, m_valid, valid_data)
+                common_logger.info("Epoch: {0} Valid Perplexity: {1:.3f}".format(i + 1, valid_perplexity))
+
+                if valid_perplexity < prev_validation_error:
+                    prev_validation_error = valid_perplexity
+                    validation_err_went_up_counter = 0
+                    path_to_latest_checkpoint = sv.saver.save(sess=session, save_path=FLAGS.save_path+"/model",
+                                                              global_step=i)
+                    common_logger.info("Saved currently best model to: {0}".format(path_to_latest_checkpoint))
+                else:
+                    validation_err_went_up_counter += 1
+                    if validation_err_went_up_counter > FLAGS.max_valid_increases:
+                        common_logger.info("EARLY STOPPING!!! Restoring from {0}".format(path_to_latest_checkpoint))
+                        sv.saver.restore(session, path_to_latest_checkpoint)
+
+                session.run(per_epoch_valid_loss_update_op, feed_dict={per_epoch_valid_loss_update: valid_perplexity})
+                session.run(per_epoch_train_loss_update_op, feed_dict={per_epoch_train_loss_update: train_perplexity})
+                # sv.summary_writer.add_summary(session.run(summary), i)
+
+            # test_perplexity = run_epoch(session, mtest, test_data)
+            # common_logger.info("Test Perplexity: {0:.3f}".format(test_perplexity))
+
+
 if __name__ == '__main__':
     pass
+    main()
+
+
