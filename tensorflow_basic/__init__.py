@@ -18,6 +18,7 @@
 # 卷积神经网络：
 # convolutional_network.py
 # alexnet_tf.py
+# vgg16net_tf.py
 # 循环神经网络：
 # static_rnn_tf.py
 # static_bidirectional_rnn_tf.py
