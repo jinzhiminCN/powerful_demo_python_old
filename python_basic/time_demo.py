@@ -6,7 +6,10 @@
 import time
 from datetime import date, timedelta, timezone
 import datetime
+from util.log_util import LoggerUtil
 
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 # =========================== 全局常量 ===========================
 default_time_format = '%Y-%m-%d %H:%M:%S'
 
@@ -221,6 +224,19 @@ def perform_time():
     print("sleep...2...")
     print(time.process_time())
 
+
+def test_time():
+    """
+
+    :return:
+    """
+    log_time_stamp = '1537455599131'
+    time_str = time_stamp_to_str(float(log_time_stamp)/1000)
+    common_logger.info(time_str)
+    time_stuct = str_to_struct_time(time_str)
+    common_logger.info(time_stuct)
+
+
 if __name__ == "__main__":
     pass
     # test_make_struct_time()
@@ -230,5 +246,6 @@ if __name__ == "__main__":
     # test_datetime_date()
     # test_datetime_time()
     # test_datetime_datetime()
-    test_time_zone()
+    # test_time_zone()
+    test_time()
 
