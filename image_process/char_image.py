@@ -19,7 +19,9 @@ image_dir = os.path.join(resource_dir, "image_data")
 # 定义一个ascii的列表，其实就是让图片上的灰度与字符对应
 ascii_char = list("$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. ")
 # 两帧之间的时间间隔，秒为单位
-DURARION = 0.1
+DURATION = 0.1
+# 字体映射
+font_map = [' ', '.', 'i', 'I', 'J', 'C', 'D', 'O', 'S', 'Q', 'G', 'F', 'E', '#', '&', '@']
 
 
 def get_char(r, g, b, alpha=256):
@@ -79,6 +81,43 @@ def image_2_char_image(image_path, char_file_path, resize=False):
     char_file.close()
 
 
+def image_2_font_image(image_path, image_save_path, max_size=100):
+    """
+    图像转换为字体图像。
+    :param image_path:
+    :param image_save_path:
+    :param max_size:
+    :return:
+    """
+    im = Image.open(image_path).convert('L')
+    width = im.size[0]
+    height = im.size[1]
+
+    font_size = 16
+
+    if width > max_size or height > max_size:
+        im.thumbnail((max_size, max_size))
+
+    # 缩放后的图像大小
+    width = im.size[0]
+    height = im.size[1]
+
+    level = im.getextrema()[-1] / (len(font_map) - 1)
+    im = im.point(lambda i: int(i / level))
+    im_new = Image.new('L', (width * font_size, height * font_size))
+
+    font = ImageFont.truetype('arial.ttf', font_size)
+    im_draw = ImageDraw.Draw(im_new)
+
+    for y in range(0, height):
+        for x in range(0, width):
+            pixel = im.getpixel((x, y))
+            im_draw.text((x * font_size, y * font_size),
+                         font_map[len(font_map) - pixel - 1], fill=255, font=font)
+
+    im_new.save(image_save_path)
+
+
 def test_char_image():
     """
     测试字符图像。
@@ -89,6 +128,18 @@ def test_char_image():
     image_path = os.path.join(dir_path, image_name)
     char_file_path = os.path.join(dir_path, "{0}.txt".format(image_name[:-4]))
     image_2_char_image(image_path, char_file_path, resize=True)
+
+
+def test_font_image():
+    """
+    测试字体图像。
+    :return:
+    """
+    dir_path = image_dir
+    image_name = '145234_164944034631_2.png'
+    image_path = os.path.join(dir_path, image_name)
+    image_font_path = "{0}_font.png".format(image_path[:-4])
+    image_2_font_image(image_path, image_font_path)
 
 
 def gif2png(file_path):
@@ -191,7 +242,7 @@ def png2gif(dir_name):
 
     gif_name = image_file.split('_')[0]+'_txt_c.gif'
     common_logger.info(gif_name)
-    imageio.mimsave(gif_name, images, "GIF", duration=DURARION)
+    imageio.mimsave(gif_name, images, "GIF", duration=DURATION)
 
 
 def test_gif_char_image():
@@ -208,6 +259,7 @@ def test_gif_char_image():
 
 if __name__ == "__main__":
     # test_char_image()
-    test_gif_char_image()
+    # test_gif_char_image()
+    test_font_image()
     pass
 
