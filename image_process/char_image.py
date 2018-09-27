@@ -165,13 +165,13 @@ def gif2png(file_path):
             # gif分割后保存的是索引颜色
             im.save(name)
             common_logger.info("png name:{0}".format(name))
-            generate_txt_png(name)
+            generate_txt_image(name)
             im.seek(current + 1)
     except:
         os.chdir(dir_path)
 
 
-def generate_txt_png(file_name):
+def generate_txt_image(file_name):
     """
     生成txt图片。
     先将图像转换为txt文本，再将txt转换为图片。
@@ -217,8 +217,10 @@ def generate_txt_png(file_name):
             y = -font_w
         dr.text([y, x], txt[i], colors[i])
         y += font_w
-    name = file_name.split('.')[0]+'_txt'+'.png'
-    common_logger.info("txt png name:{0}".format(name))
+
+    file_name_array = file_name.split('.')
+    name = file_name_array[0] + '_txt.' + file_name_array[1]
+    common_logger.info("txt image name:{0}".format(name))
     im_txt.save(name)
 
 
