@@ -15,7 +15,6 @@
 #     options.options是全局的options对象，所有定义的选项变量都会作为该对象的属性。
 #     options.parse_command_line()转换命令行参数，并将转换后的值对应的设置到全局options对象相关属性上。
 #   追加命令行参数的方式是--myoption=myvalue。
-#
 # ==============================================================================
 import tornado.ioloop
 import tornado.web
@@ -83,7 +82,7 @@ def test_hello_world_server():
 
 def test_multi_process():
     """
-    测试hello world的多进程。
+    测试hello world应用的多进程服务。
     :return:
     """
     app = make_app()
@@ -99,7 +98,7 @@ def test_multi_process():
 
 def test_options():
     """
-    测试options选项方法。
+    测试options选项在web应用中的用法。
     命令python hello_world_demo.py llo--port=9000 --subject=python,c++,java,php,ios
     :return:
     """
@@ -113,7 +112,7 @@ def test_options():
 
 def test_multi_handler():
     """
-    测试多种handler。
+    测试http服务中的多种handler方法。
     :return:
     """
     app = tornado.web.Application(handlers,
