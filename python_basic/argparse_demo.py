@@ -77,4 +77,3 @@ if __name__ == "__main__":
     pass
     # simple_arg()
     detail_arg()
-
