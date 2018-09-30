@@ -27,3 +27,6 @@ TF_MODEL_LOGS_DIR = 'E:/logs/tensorflow_logs/'
 
 # model checkpoint directory
 TF_MODEL_CHECKPOINT_DIR = 'E:/logs/checkpoint/'
+
+# redis ip and port
+REDIS_ADDRESS = ''
