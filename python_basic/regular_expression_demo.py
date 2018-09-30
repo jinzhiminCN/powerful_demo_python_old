@@ -9,6 +9,11 @@ from util.log_util import LoggerUtil
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
 
+# 时间正则表达式
+TIME_REG = '^(0[0-9]|1[0-9]|2[0-3]|[0-9])' \
+           '\:(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])' \
+           '\:(0[0-9]|1[0-9]|2[0-9]|3[0-9]|4[0-9]|5[0-9]|[0-9])$'
+
 
 def test_findall():
     """
@@ -75,6 +80,11 @@ def test_re():
         common_logger.info("groups:{0}".format(groups_content))
         common_logger.info("group :{0}".format(matcher.group()))
         display_match(matcher)
+
+    # 匹配时间字符串
+    time_str = '19:05:30'
+    matcher = re.match(TIME_REG, time_str)
+    display_match(matcher)
 
 
 def test_forward_backward():
@@ -151,12 +161,29 @@ def test_group():
     common_logger.info("group 1:{0}".format(matcher.group(1)))
     common_logger.info("group 2:{0}".format(matcher.group(2)))
 
+    matcher = re.match('^(\d{3})-(\d{3,8})$', '010-12345')
+    common_logger.info(matcher.group(0))
+    common_logger.info(matcher.group(1))
+    common_logger.info(matcher.group(2))
+
+
+def test_split():
+    """
+    测试re的split方法。
+    :return:
+    """
+    common_logger.info('a b   c'.split(' '))
+    common_logger.info(re.split(r'\s+', 'a b   c'))
+    common_logger.info(re.split(r'[\s\,]+', 'a,b, c  d'))
+    common_logger.info(re.split(r'[\s\,\;]+', 'a,b;; c  d'))
+
 
 if __name__ == "__main__":
     # test_forward_backward()
     # test_traceback()
     # test_re()
     # test_match_search()
+    # test_split()
     pass
     test_group()
 
