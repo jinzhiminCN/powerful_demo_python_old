@@ -13,6 +13,16 @@ mnist_dir = com_config.MNIST_DIR
 
 def get_tf_dataset(dataset_text_file, batch_size=64, channels=3, crop_size=[28, 28],
                    shuffle_size=200, augmentation=False):
+    """
+    获取tf数据集。
+    :param dataset_text_file:
+    :param batch_size:
+    :param channels:
+    :param crop_size:
+    :param shuffle_size:
+    :param augmentation: 是否进行图像增强。
+    :return:
+    """
     def aug_1(image):
         image = tf.image.random_brightness(image, max_delta=2./255.)
         image = tf.image.random_saturation(image, lower=0.01, upper=0.05)
@@ -69,19 +79,24 @@ def get_tf_dataset(dataset_text_file, batch_size=64, channels=3, crop_size=[28, 
         return image, label
 
     def read_labeled_image_list(dataset_text_file):
+        """
+        读取带标签的图像列表。
+        :param dataset_text_file:
+        :return:
+        """
         filenames = []
         labels = []
 
         with open(dataset_text_file, "r", encoding="utf-8") as f_l:
-            filenames_lables = f_l.readlines()
+            filenames_labels = f_l.readlines()
 
-        for filename_lable in filenames_lables:
-            filename_array = filename_lable.split(" ")
+        for filename_label in filenames_labels:
+            filename_array = filename_label.split(" ")
             filenames.append(filename_array[0])
             labels.append(int(filename_array[1].strip("\n")))
         return filenames, labels
 
-    def read_img_file_label_list(dir_path):
+    def read_img_path_label_list(dir_path):
         """
         读取图像文件名和标签的列表。
         :return:
@@ -102,7 +117,7 @@ def get_tf_dataset(dataset_text_file, batch_size=64, channels=3, crop_size=[28, 
 
         return img_paths, img_labels
 
-    filenames, labels = read_img_file_label_list(dataset_text_file)
+    filenames, labels = read_img_path_label_list(dataset_text_file)
     # filenames, labels = read_labeled_image_list(dataset_text_file)
 
     filenames = tf.constant(filenames, name='filename_list')
@@ -136,9 +151,9 @@ def train():
     conv2 = tf.layers.conv2d(inputs=pool1, filters=128, kernel_size=(3, 3), padding="same", activation=None)
     pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
     pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 128])
-    fc1 = tf.layers.dense(pool2_flat, 500, activation=tf.nn.relu)
-    fc2 = tf.layers.dense(fc1, 10, activation=tf.nn.relu)
-    y_pred = tf.nn.softmax(fc2)
+    full_conn1 = tf.layers.dense(pool2_flat, 500, activation=tf.nn.relu)
+    y_output = tf.layers.dense(full_conn1, 10, activation=tf.nn.relu)
+    y_pred = tf.nn.softmax(y_output)
 
     # 模型标签
     y_label = tf.placeholder(tf.float32, [batch_size, 10])
@@ -159,6 +174,7 @@ def train():
     iterator = dataset.make_one_shot_iterator()
     img_batch, label_batch = iterator.get_next()
 
+    # 初始化
     init = tf.global_variables_initializer()
 
     # 执行训练会话
