@@ -30,3 +30,12 @@ TF_MODEL_CHECKPOINT_DIR = 'E:/logs/checkpoint/'
 
 # redis ip and port
 REDIS_ADDRESS = ''
+
+# smtp host
+SMTP_HOST = "smtp.163.com"
+# smtp sender
+SMTP_SENDER = "test"
+# smtp password
+SMTP_PASSWD = "test"
+
+
