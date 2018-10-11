@@ -2,6 +2,8 @@
 
 # ==============================================================================
 # 测试smtp的相关方法。
+# https://docs.python.org/3/library/email.examples.html
+# SMTP(Simple Mail Transfer Protocol) MIME(Multipurpose Internet Mail Extensions)
 # SMTP是发送邮件的协议，Python内置对SMTP的支持，可以发送纯文本邮件、HTML邮件以及带附件的邮件。
 # Python对SMTP支持有smtplib和email两个模块，email负责构造邮件，smtplib负责发送邮件。
 # ==============================================================================
@@ -9,16 +11,30 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
+from email.message import EmailMessage
 from email import encoders
 from email.header import Header
-from email.utils import parseaddr, formataddr
+from email.utils import parseaddr, formataddr, make_msgid
 import smtplib
+import imghdr
 import os
 import time
 import config.common_config as com_config
+from util.log_util import LoggerUtil
 
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 resource_dir = com_config.RESOURCE_DIR
 image_dir = os.path.join(resource_dir, "image_data")
+
+# 服务器地址
+email_host = com_config.SMTP_HOST
+# 发件人
+sender = com_config.SMTP_SENDER
+# 密码，如果是授权码就填授权码
+password = com_config.SMTP_PASSWD
+# 收件人
+receiver = sender
 
 
 def send_email(subject):
@@ -27,15 +43,6 @@ def send_email(subject):
     :param subject: 邮件标题
     :return:
     """
-    # 服务器地址
-    email_host = ""
-    # 发件人
-    sender = ""
-    # 密码，如果是授权码就填授权码
-    password = ""
-    # 收件人
-    receiver = ""
-
     msg = MIMEMultipart()
     # 标题
     msg['Subject'] = subject
@@ -200,8 +207,107 @@ def test_send_email():
     send_email(subject)
 
 
+def test_simple_text_message():
+    """
+    测试EmailMessage的使用。发送simple text message。
+    :return:
+    """
+    msg = EmailMessage()
+    msg.set_content("Email Message Content")
+
+    msg['Subject'] = "Email Message Subject"
+    msg['From'] = "me"
+    msg['To'] = "you"
+
+    # 发送email信息
+    send_email_message(msg.as_string())
+
+
+def test_email_attachment():
+    """
+    测试发送附件。
+    :return:
+    """
+    msg = EmailMessage()
+    msg.set_content("Email With Image")
+
+    msg['Subject'] = "Email Image Subject"
+    msg['From'] = "me"
+    msg['To'] = "you, she"
+
+    # 增加图片附件
+    img_name = "demo1.png"
+    img_path = os.path.join(image_dir, img_name)
+    with open(img_path, 'rb') as fp:
+        img_data = fp.read()
+        img_type = imghdr.what(None, img_data)
+        msg.add_attachment(img_data, maintype='image',
+                           subtype=img_type, filename=img_name)
+
+    # 发送email信息
+    send_email_message(msg.as_bytes())
+
+
+def test_html_email():
+    """
+    测试html格式的email信息。
+    :return:
+    """
+    msg = EmailMessage()
+    msg['Subject'] = "Email Html Subject"
+    msg['From'] = "me"
+    msg['To'] = "you"
+
+    # 添加文本内容
+    msg.set_content("""\
+        Hello Html Text Message Demo
+
+        你好，这是基本的Email文本信息。
+        """)
+
+    # 添加html文本
+    img_cid = make_msgid()
+    msg.add_alternative("""\
+    <html>
+      <head></head>
+      <body>
+        <h1>html文本</h1>
+        <p>Hello Html Text Message</p>
+        <p>你好，这是基本的Email文本信息。</p>
+        <img src="cid:{img_cid}" />
+      </body>
+    </html>
+    """.format(img_cid=img_cid[1:-1]), subtype='html')
+
+    # 增加图片
+    img_name = "demo1.png"
+    img_path = os.path.join(image_dir, img_name)
+    with open(img_path, 'rb') as img:
+        msg.get_payload()[1].add_related(img.read(), 'image', 'png',
+                                         cid=img_cid)
+
+    # 发送email信息
+    send_email_message(msg.as_bytes())
+
+
+def send_email_message(msg):
+    """
+    使用SMTP来发送信息。
+    :param msg:
+    :return:
+    """
+    smtp = smtplib.SMTP()
+    smtp.connect(email_host, 25)
+    smtp.login(sender, password)
+    smtp.sendmail(sender, receiver, msg)
+    smtp.quit()
 
 
 if __name__ == "__main__":
     pass
+    # test_simple_text_message()
+    # test_email_attachment()
+    test_html_email()
+
+
 
