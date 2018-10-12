@@ -187,6 +187,16 @@ def str_to_struct_time(time_str, time_format='%Y-%m-%d %H:%M:%S'):
     return time.strptime(time_str, time_format)
 
 
+def struct_time_to_str(struct_time, time_format='%Y-%m-%d %H:%M:%S'):
+    """
+    时间struct_time转换为时间字符串。
+    :param struct_time:
+    :param time_format:
+    :return:
+    """
+    return time.strftime(time_format, struct_time)
+
+
 def str_to_time_stamp(time_str, time_format='%Y-%m-%d %H:%M:%S'):
     """
     时间字符串转换为时间戳。
@@ -225,16 +235,16 @@ def perform_time():
     print(time.process_time())
 
 
-def test_time():
+def test_time_info():
     """
-
+    测试time相关信息。
     :return:
     """
     log_time_stamp = '1537455599131'
     time_str = time_stamp_to_str(float(log_time_stamp)/1000)
     common_logger.info(time_str)
-    time_stuct = str_to_struct_time(time_str)
-    common_logger.info(time_stuct)
+    time_struct = str_to_struct_time(time_str)
+    common_logger.info(time_struct)
 
 
 if __name__ == "__main__":
@@ -247,5 +257,5 @@ if __name__ == "__main__":
     # test_datetime_time()
     # test_datetime_datetime()
     # test_time_zone()
-    test_time()
+    test_time_info()
 
