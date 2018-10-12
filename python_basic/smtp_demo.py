@@ -4,6 +4,7 @@
 # 测试smtp的相关方法。
 # https://docs.python.org/3/library/email.examples.html
 # SMTP(Simple Mail Transfer Protocol) MIME(Multipurpose Internet Mail Extensions)
+# MTA(Mail Transfer Agent 邮件传输代理)
 # SMTP是发送邮件的协议，Python内置对SMTP的支持，可以发送纯文本邮件、HTML邮件以及带附件的邮件。
 # Python对SMTP支持有smtplib和email两个模块，email负责构造邮件，smtplib负责发送邮件。
 # ==============================================================================
@@ -37,94 +38,6 @@ password = com_config.SMTP_PASSWD
 receiver = sender
 
 
-def send_email(subject):
-    """
-    发送邮件。
-    :param subject: 邮件标题
-    :return:
-    """
-    msg = MIMEMultipart()
-    # 标题
-    msg['Subject'] = subject
-    # 发件人昵称
-    msg['From'] = ""
-    # 收件人昵称
-    msg['To'] = ""
-
-    signature = '''
-        \n\t this is auto test report!
-        \n\t you don't need to follow
-    '''
-
-    # 签名
-    # text = MIMEText(signature, 'plain')
-    # msg.attach(text)
-
-    # 正文-图片 只能通过html格式来放图片
-    mail_msg = '''
-        <p>\n\t this is auto test report!</p>
-        <p>\n\t you don't need to follow</p>
-        <p>截图如下：</p>
-        <p><img src="cid:image1"></p>
-        '''
-    msg.attach(MIMEText(mail_msg, 'html', 'utf-8'))
-
-    img_path = os.path.join(image_dir, "demo1.png")
-    # 指定图片为当前目录
-    fp = open(img_path, 'rb')
-    msg_image = MIMEImage(fp.read())
-    fp.close()
-    # 定义图片 ID，在 HTML 文本中引用
-    msg_image.add_header('Content-ID', '<image1>')
-    msg.attach(msg_image)
-
-    ctype = 'application/octet-stream'
-    maintype, subtype = ctype.split('/', 1)
-
-    # 附件-图片
-    image = MIMEImage(open(img_path, 'rb').read(), _subtype=subtype)
-    image.add_header('Content-Disposition', 'attachment', filename='img.jpg')
-    msg.attach(image)
-
-    # 附件-文件
-    file = MIMEBase(maintype, subtype)
-    file.set_payload(open(r'320k.txt', 'rb').read())
-    file.add_header('Content-Disposition', 'attachment', filename='test.txt')
-    encoders.encode_base64(file)
-    msg.attach(file)
-
-    # 发送
-    smtp = smtplib.SMTP()
-    smtp.connect(email_host, 25)
-    smtp.login(sender, password)
-    smtp.sendmail(sender, receiver, msg.as_string())
-    smtp.quit()
-    print('success')
-
-
-def create_msg():
-    """
-    创建email消息。
-    :return:
-    """
-    msg = MIMEText('<html><body><h1>Hello</h1>' +
-        '<p>send by <a href="http://www.python.org">Python</a>...</p>' +
-        '</body></html>', 'html', 'utf-8')
-
-    msg.attach(MIMEText('<html><body><h1>Hello</h1>' +
-        '<p><img src="cid:0"></p>' +
-        '</body></html>', 'html', 'utf-8'))
-
-    # 利用MIMEMultipart就可以组合一个HTML和Plain，要注意指定subtype是alternative：
-    msg = MIMEMultipart('alternative')
-    msg['From'] = ...
-    msg['To'] = ...
-    msg['Subject'] = ...
-
-    msg.attach(MIMEText('hello', 'plain', 'utf-8'))
-    msg.attach(MIMEText('<html><body><h1>Hello</h1></body></html>', 'html', 'utf-8'))
-
-
 def ssl_mail():
     smtp_server = 'smtp.gmail.com'
     smtp_port = 587
@@ -135,76 +48,106 @@ def ssl_mail():
     server.set_debuglevel(1)
 
 
-def createMail():
+def test_mime_text():
+    """
+    测试MIMEText对象。
+    :return:
+    """
+    from_addr = "me"
+    to_addr = "you"
+
     msg = MIMEText('hello, send by Python...', 'plain', 'utf-8')
-    # 输入Email地址和口令:
-    from_addr = input('From: ')
-    password = input('Password: ')
-    # 输入收件人地址:
-    to_addr = input('To: ')
-    # 输入SMTP服务器地址:
-    smtp_server = input('SMTP server: ')
 
-    # 这是因为邮件主题、如何显示发件人、收件人等信息并不是通过SMTP协议发给MTA，
-    # 而是包含在发给MTA的文本中的，所以，必须把From、To和Subject添加到MIMEText中，才是一封完整的邮件：
-    msg['From'] = _format_addr('Python爱好者 <%s>' % from_addr)
-    msg['To'] = _format_addr('管理员 <%s>' % to_addr)
-    msg['Subject'] = Header('来自SMTP的问候……', 'utf-8').encode()
+    # 邮件主题、如何显示发件人、收件人等信息并不是通过SMTP协议发给MTA，而是包含在发给MTA的文本中的，
+    # 所以，必须把From、To和Subject添加到MIMEText中，才是一封完整的邮件。
+    msg['From'] = _format_addr('Python爱好者 <{0}>'.format(from_addr))
+    msg['To'] = _format_addr('管理员 <{0}>'.format(to_addr))
+    msg['Subject'] = Header('来自SMTP的问候', 'utf-8').encode()
 
-    server = smtplib.SMTP(smtp_server, 25) # SMTP协议默认端口是25
-    server.set_debuglevel(1)
-    server.login(from_addr, password)
-    server.sendmail(from_addr, [to_addr], msg.as_string())
-    server.quit()
+    send_email_message(msg.as_bytes())
 
 
-def _format_addr(s):
-    name, addr = parseaddr(s)
+def _format_addr(addr_str):
+    """
+    格式化地址字符串。
+    :param addr_str:
+    :return:
+    """
+    name, addr = parseaddr(addr_str)
     return formataddr((Header(name, 'utf-8').encode(), addr))
 
 
-def createPartMail():
-    # 输入Email地址和口令:
-    from_addr = input('From: ')
-    password = input('Password: ')
-    # 输入收件人地址:
-    to_addr = input('To: ')
-    # 输入SMTP服务器地址:
-    smtp_server = input('SMTP server: ')
+def test_multipart_mail():
+    """
+    测试MIMEMultipart对象。
+    :return:
+    """
+    from_addr = "me"
+    to_addr = "you"
 
-    # 邮件对象:
-    msg = MIMEMultipart()
-    msg['From'] = _format_addr('Python爱好者 <%s>' % from_addr)
-    msg['To'] = _format_addr('管理员 <%s>' % to_addr)
-    msg['Subject'] = Header('来自SMTP的问候……', 'utf-8').encode()
+    # 邮件对象
+    msg = MIMEMultipart('alternative')
+    msg['From'] = _format_addr('Python爱好者 <{0}>'.format(from_addr))
+    msg['To'] = _format_addr('管理员 <{0}>'.format(to_addr))
+    msg['Subject'] = Header('来自SMTP的问候', 'utf-8').encode()
 
-    # 邮件正文是MIMEText:
-    msg.attach(MIMEText('send with file...', 'plain', 'utf-8'))
+    # 邮件正文是MIMEText,一次只能attach一个html页面
+    # mime_text = MIMEText("""<html><body><h1>Hello</h1>
+    #     <p>send by <a href="http://www.python.org">Python</a>...</p>
+    #     </body></html>""", 'html', 'utf-8')
+    # msg.attach(mime_text)
+    # msg.attach(MIMEText('send with file...', 'plain', 'utf-8'))
+    # msg.attach(MIMEText('<html><body><h1>Hello</h1></body></html>', 'html', 'utf-8'))
 
-    # 添加附件就是加上一个MIMEBase，从本地读取一个图片:
-    with open('/Users/michael/Downloads/test.png', 'rb') as f:
+    # 正文-图片 只能通过html格式来放图片
+    mail_msg = """<html><body>
+        <p>html image</p>
+        <p>截图如下：</p>
+        <p><img src="cid:image1"></p>
+        </body></html>
+        """
+    msg.attach(MIMEText(mail_msg, 'html', 'utf-8'))
+
+    # 指定图片为当前目录
+    img_path = os.path.join(image_dir, "demo1.png")
+    fp = open(img_path, 'rb')
+    msg_image = MIMEImage(fp.read())
+    fp.close()
+    # 定义图片ID，在HTML文本中引用
+    msg_image.add_header('Content-ID', '<image1>')
+    msg.attach(msg_image)
+
+    # 添加附件就是加上一个MIMEBase，从本地读取一个图片。
+    img_name = "lena.jpg"
+    img_path = os.path.join(image_dir, img_name)
+    with open(img_path, 'rb') as file:
         # 设置附件的MIME和文件名，这里是png类型:
-        mime = MIMEBase('image', 'png', filename='test.png')
+        mime = MIMEBase('image', 'jpg', filename=img_name)
         # 加上必要的头信息:
-        mime.add_header('Content-Disposition', 'attachment', filename='test.png')
+        mime.add_header('Content-Disposition', 'attachment', filename=img_name)
         mime.add_header('Content-ID', '<0>')
         mime.add_header('X-Attachment-Id', '0')
         # 把附件的内容读进来:
-        mime.set_payload(f.read())
+        mime.set_payload(file.read())
         # 用Base64编码:
         encoders.encode_base64(mime)
         # 添加到MIMEMultipart:
         msg.attach(mime)
 
+    c_type = 'application/octet-stream'
+    maintype, subtype = c_type.split('/', 1)
 
-def test_send_email():
-    """
-    测试发送简单的email。
-    :return:
-    """
-    now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))
-    subject = now + '自动化测试报告'
-    send_email(subject)
+    # 附件-文件
+    txt_name = "logistic_test_set.txt"
+    txt_path = os.path.join(os.path.join(resource_dir, "ml_data"), txt_name)
+    file = MIMEBase(maintype, subtype)
+    file.set_payload(open(txt_path, 'rb').read())
+    file.add_header('Content-Disposition', 'attachment', filename='test.txt')
+    encoders.encode_base64(file)
+    msg.attach(file)
+
+    # 发送邮件
+    send_email_message(msg.as_bytes())
 
 
 def test_simple_text_message():
@@ -298,6 +241,7 @@ def send_email_message(msg):
     """
     smtp = smtplib.SMTP()
     smtp.connect(email_host, 25)
+    smtp.set_debuglevel(2)
     smtp.login(sender, password)
     smtp.sendmail(sender, receiver, msg)
     smtp.quit()
@@ -307,7 +251,8 @@ if __name__ == "__main__":
     pass
     # test_simple_text_message()
     # test_email_attachment()
-    test_html_email()
-
+    # test_html_email()
+    # test_mime_text()
+    test_multipart_mail()
 
 
