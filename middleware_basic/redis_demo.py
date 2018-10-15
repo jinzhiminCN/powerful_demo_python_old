@@ -7,6 +7,8 @@
 # 并使用官方的语法和命令，Redis是StrictRedis的子类。
 # ==============================================================================
 import redis
+from rediscluster import StrictRedisCluster
+from rediscluster.exceptions import RedisClusterException
 from config.common_config import *
 from util.log_util import LoggerUtil
 
@@ -15,6 +17,9 @@ common_logger = LoggerUtil.get_common_logger()
 # redis主机和端口
 host = "127.0.0.1"
 port = 6379
+redis_hosts = ["127.0.0.1:6379", "127.0.0.1:6378", "127.0.0.1:6377"]
+redis_nodes = [dict(zip(['host', 'port'], host_item.split(':'))) for host_item in redis_hosts]
+redis_pass = "999999"
 
 
 def test_redis_connect():
@@ -24,6 +29,22 @@ def test_redis_connect():
     """
     rds = redis.Redis(host=host, port=port, db=0)
     rds.set('name', 'nike')
+
+
+def test_redis_cluster_connect():
+    """
+    测试redis集群链接。
+    :return:
+    """
+    try:
+        rds_cluster = StrictRedisCluster(startup_nodes=redis_nodes,
+                                         password=redis_pass,
+                                         decode_responses=True)
+    except RedisClusterException:
+        rds_cluster = StrictRedisCluster(startup_nodes=redis_nodes,
+                                         decode_responses=True)
+    value = rds_cluster.hget('my_hash', "my_key")
+    common_logger.info(value)
 
 
 def test_redis_pool():
@@ -314,6 +335,7 @@ if __name__ == "__main__":
     # test_redis_string()
     # test_redis_hash()
     # test_redis_set()
-    test_redis_zset()
+    # test_redis_zset()
+    test_redis_cluster_connect()
     pass
 
