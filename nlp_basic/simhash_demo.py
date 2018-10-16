@@ -143,145 +143,15 @@ def test_simhash():
     common_logger.info("{0}   {1}".format(hash1.hamming_distance(hash3), hash1.similarity(hash3)))
 
 
-class NewsSimHash(object):
+def is_similar(value1, value2, n=4, f=64):
     """
-    新闻信息的simhash示例。
+    比较相似性。
+    :param value1:
+    :param value2:
+    :param n:
+    :param f:
+    :return:
     """
-    def __init__(self, origin_news_map_file, result_file_path, ):
-        """
-        构造函数。
-        """
-        self.bucket = collections.defaultdict(set)
-        self.origin_news_map_file = origin_news_map_file
-        self.test_news_fp = {}
-        self.lib_news_fp = {}
-        pass
-
-    def process(self):
-        """
-        执行过程
-        :return:
-        """
-        pass
-
-    def load_origin_news_map(self):
-        """
-        加载原始新闻映射文件。文件中包含url链接和文件路径。
-        :return:
-        """
-        fin = codecs.open(self.origin_news_map_file, 'r', 'utf-8')
-        for line in fin:
-            lines = line.strip()
-            if len(lines) == 0:
-                continue
-
-            arr = lines.split('\t')
-            if len(arr) < 3:
-                continue
-            self.lib_news_fp[arr[0]] = arr[3]
-
-
-
-# 读入库中存储的所有新闻
-lib_newsfp_file = sys.argv[1]
-result_file = sys.argv[2]
-
-test_news_fp = {}
-lib_news_fp = {}
-
-bucket = collections.defaultdict(set)
-
-offsets = []
-
-
-def cacu_frequent(list1):
-    frequent = {}
-    for i in list1:
-        if i not in frequent:
-            frequent[i] = 0
-        frequent[i] += 1
-    return frequent
-
-
-def load_lib_newsfp_file():
-    global lib_news_fp
-
-    fin = codecs.open(lib_newsfp_file, 'r', 'utf-8')
-    for line in fin:
-        lines = line.strip()
-        if len(lines) == 0:
-            continue
-        Arr = lines.split('\t')
-
-        if len(Arr) < 3:
-            continue
-        lib_news_fp[Arr[0]] = Arr[3]
-
-
-def get_near_dups(check_value):
-    ans = set()
-
-    for key in get_keys(int(check_value)):
-        dups = bucket[key]
-        for dup in dups:
-            total_value, url = dup.split(',', 1)
-            if isSimilar(int(check_value), int(total_value)) == True:
-                ans.add(url)
-                break  # 与一条重复 退出查找
-        if ans:
-            break
-
-    return list(ans)
-
-
-def ini_Index():
-    global bucket
-
-    getoffsets()
-    print
-    offsets
-    objs = [(str(url), str(values)) for url, values in lib_news_fp.items()]
-
-    for i, q in enumerate(objs):
-        addindex(*q)
-
-
-def addindex(url, value):
-    global bucket
-    for key in get_keys(int(value)):
-        v = '%d,%s' % (int(value), url)
-        bucket[key].add(v)
-
-
-def deleteindex(url, value):
-    global bucket
-    for key in get_keys(int(value)):
-        v = '%d,%s' % (int(value), url)
-        if v in bucket[key]:
-            bucket[key].remove(v)
-
-
-def getoffsets(f=64, k=4):
-    global offsets
-
-    offsets = [f // (k + 1) * i for i in range(k + 1)]
-
-
-def get_keys(value, f=64):
-    for i, offset in enumerate(offsets):
-        if i == (len(offsets) - 1):
-            m = 2 ** (f - offset) - 1
-        else:
-            m = 2 ** (offsets[i + 1] - offset) - 1
-        c = value >> offset & m
-        yield '%x:%x' % (c, i)
-
-
-def bucket_size():
-    return len(bucket)
-
-
-def isSimilar(value1, value2, n=4, f=64):
     ans = 0
     x = (value1 ^ value2) & ((1 << f) - 1)
     while x and (ans <= n):
@@ -292,120 +162,18 @@ def isSimilar(value1, value2, n=4, f=64):
     return False
 
 
-def load_test_file():
-    global test_news_fp
-
-    for line in sys.stdin:
-        features = []
-
-        result = line.strip().split('\t')
-
-        url = result[0]
-        content = result[2].split()
-        title = result[1].split()
-        features.extend(content)
-        features.extend(title)
-        total_features = cacu_frequent(features)
-
-        test_news_fp[url] = build_by_features(total_features)
-
-
-def load_test_newsfp_file():
-    global test_news_fp
-
-    for line in sys.stdin:
-        lines = line.strip()
-        if len(lines) == 0:
-            continue
-        Arr = lines.split('\t')
-
-        if len(Arr) < 3:
-            continue
-        test_news_fp[Arr[0]] = Arr[3]
-
-
-def build_by_features(features, f=64, hashfunc=None):
-    v = [0] * f
-    masks = [1 << i for i in range(f + f)]
-    if hashfunc is None:
-        def _hashfunc(x):
-            return int(hashlib.md5(x).hexdigest(), 16)
-
-        hashfunc = _hashfunc
-    if isinstance(features, dict):
-        total_features = features.items()
-    else:
-        total_features = features
-
-    for fea in total_features:
-        if isinstance(fea, str):
-            h = hashfunc(fea.encode('utf-8'))
-            w = 1
-        else:
-            h = hashfunc(fea[0].encode('utf-8'))
-            w = fea[1]
-        for i in range(f):
-            v[i] += w if h & masks[i + 32] else -w
-    ans = 0
-
-    for i in range(f):
-        if v[i] >= 0:
-            ans |= masks[i]
-    return ans
-
-
-sum = 0
-
-
-def process():
-    global test_news_fp
-    global sum
-
-
-fout = codecs.open(result_file, 'w', 'utf-8')
-
-load_lib_newsfp_file()
-#   load_test_file()
-ini_Index()
-check_features = test_news_fp.items()
-lib_features = lib_news_fp.items()
-i = 0
-for check_fp in check_features:
-    #       print i
-    ans = []
-    ans = get_near_dups(check_fp[1])
-    if ans:
-        for url in ans:
-            output_str = str(check_fp[0]) + '\t' + str(url)
-            fout.write(output_str + '\n')
-            # break
-            # print check_fp[0],'is duplicate'
-        sum = sum + 1  # del test_news_fp[check_fp[0]]
-        print
-        i
-
-    i += 1
-fout.close()
-
-
-def test_news_simhash():
+def test_similar():
     """
-    测试新闻信息内容的simhash。
+    测试相似性。
     :return:
     """
-    #        process()
-    begin = datetime.datetime.now()
-    load_test_newsfp_file()
-    #   load_test_file()
-    #   getoffsets()
-    #   print offsets
-    #   load_lib_newsfp_file()
-    process()
-
-    end = datetime.datetime.now()
-    common_logger.info("耗时：{0} 重复新闻数：{1} 准确率：{2}"
-                       .format(end - begin, sum, sum / 2589))
+    value1 = 55
+    value2 = 56
+    result = is_similar(value1, value2)
+    common_logger.info("{0}".format(result))
 
 
 if __name__ == '__main__':
-    test_simhash()
+    # test_simhash()
+    pass
+    test_similar()
