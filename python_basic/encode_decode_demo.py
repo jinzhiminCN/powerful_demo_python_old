@@ -4,11 +4,16 @@
 # 编解码相关的方法，包括encode decode等。
 # 汉字编码 https://www.qqxiuzi.cn/zh/hanzi-unicode-bianma.php
 # ==============================================================================
-
+import codecs
+import os
+import config.common_config as com_config
 from util.log_util import LoggerUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
+
+resource_dir = com_config.RESOURCE_DIR
+
 
 chinese_code_dict = {
     "基本汉字": "4E00-9FA5",
@@ -47,21 +52,21 @@ def test_encode_decode():
 
     # 直接定义unicode字符串，通过在字符串前加u的方式
     unicode_str = u"Hello world ２４８Ｑ字符串"
-    print("原始unicode字符串：{0},类型：{1}".format(unicode_str, type(unicode_str)))
+    common_logger.info("原始unicode字符串：{0},类型：{1}".format(unicode_str, type(unicode_str)))
 
     unicode_byte = unicode_str.encode('unicode_escape')
-    print("转换为unicode byte编码：{0},类型：{1}".format(unicode_byte, type(unicode_byte)))
+    common_logger.info("转换为unicode byte编码：{0},类型：{1}".format(unicode_byte, type(unicode_byte)))
 
     unicode_value = unicode_str.encode('unicode_escape').decode()
-    print("转换为unicode编码：{0},类型：{1}".format(unicode_value, type(unicode_value)))
+    common_logger.info("转换为unicode编码：{0},类型：{1}".format(unicode_value, type(unicode_value)))
 
     utf_str = unicode_str.encode("utf-8")
-    print(utf_str)
-    print(utf_str.decode())
+    common_logger.info(utf_str)
+    common_logger.info(utf_str.decode())
 
     gbk_str = unicode_str.encode("gbk")
-    print(gbk_str)
-    print(gbk_str.decode("gbk"))
+    common_logger.info(gbk_str)
+    common_logger.info(gbk_str.decode("gbk"))
 
 
 def change_to_unicode(content):
@@ -139,15 +144,15 @@ def test_unicode():
     """
     common_str = "Hello world ２４８Ｑ字符串"
     for char_word in common_str:
-        print("{0: >4} 中文：{1}，ord：{2}, 编码：{3}".format(
+        common_logger.info("{0: >4} 中文：{1}，ord：{2}, 编码：{3}".format(
             char_word, is_chinese(char_word), ord(char_word), change_to_unicode(char_word)))
 
     # 使用unicode编码组成字符串
     unicode_str = u'\u31A0\u4e00\u9FA5\u3007\u3105'
-    print(unicode_str)
+    common_logger.info(unicode_str)
 
     # 字符串全角转换半角
-    print(str_full_to_half(common_str))
+    common_logger.info(str_full_to_half(common_str))
 
 
 def half_to_full_width(uchar):
@@ -197,10 +202,24 @@ def uniform(ustring):
     return str_full_to_half(ustring).lower()
 
 
+def test_codecs():
+    """
+    测试codecs模块。
+    :return:
+    """
+    ml_data_dir = os.path.join(resource_dir, "ml_data")
+    file_path = os.path.join(ml_data_dir, "logistic_test_set.txt")
+    with codecs.open(file_path, mode="r", encoding="utf-8") as file:
+        # content = file.read()
+        # common_logger.info("read: {0}".format(content))
+        lines = file.readlines()
+        common_logger.info("read lines: {0}".format(lines))
+
 if __name__ == "__main__":
     pass
-    test_encode_decode()
-    # print(change_to_unicode("ABC --- 哲学"))
+    # test_encode_decode()
+    # common_logger.info(change_to_unicode("ABC --- 哲学"))
     # test_unicode()
+    test_codecs()
 
 
