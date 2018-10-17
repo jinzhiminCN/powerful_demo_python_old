@@ -11,10 +11,8 @@ from util.log_util import LoggerUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
-# =========================== 全局常量 ===========================
-default_time_format = '%Y-%m-%d %H:%M:%S'
 
-# =========================== function ===========================
+default_time_format = '%Y-%m-%d %H:%M:%S'
 
 
 def test_make_struct_time():

@@ -9,8 +9,6 @@ import tarfile
 import shutil
 import config.common_config as com_config
 
-# =========================== function ===========================
-
 
 def make_zip(src_dir, zip_filename):
     """

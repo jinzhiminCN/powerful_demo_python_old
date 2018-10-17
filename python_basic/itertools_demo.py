@@ -8,8 +8,6 @@ import itertools
 import sys
 import operator
 
-# =========================== function ===========================
-
 
 def show_result(description, result):
     """
