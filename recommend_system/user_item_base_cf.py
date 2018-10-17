@@ -137,8 +137,8 @@ class UserBasedCF:
 
     def recommend(self, user, train=None, k=8, n_item=40):
         """
-        为指定用户推荐item。选择最相似的k个用户，然后对
-        用户和商品加权排序，计算最应该推荐的n_item个商品。
+        为指定用户推荐item。选择最相似的k个用户，然后对用户和商品加权排序，
+        计算最应该推荐的n_item个商品。
         :param user:
         :param train:
         :param k:
@@ -232,6 +232,10 @@ class UserBasedCF:
 
 class ItemBasedCF(object):
     def __init__(self, datafile=None):
+        """
+        构造函数及初始化。
+        :param datafile:
+        """
         self.datafile = datafile
         self.data = None
         self.train_data = None
@@ -246,7 +250,7 @@ class ItemBasedCF(object):
         """
         read the data from the data file which is a data set
         """
-        print("ireadData:")
+        print("read data:")
         self.datafile = datafile or self.datafile
         self.data = []
         for line in open(self.datafile):
@@ -278,29 +282,38 @@ class ItemBasedCF(object):
     def item_similarity(self, train=None):
         """
         the other method of getting user similarity which is better than above
-        you can get the method on page 46
         In this experiment，we use this method
+        计算物品相似度。
         """
         train = train or self.train_data
         self.item_sim_best = dict()
-        N = dict()
-        C = dict()
+        n_items = dict()
+        c_items = dict()
         for u, items in train.items():
             for i in items:
-                N.setdefault(i, 0)
-                N[i] += 1
+                n_items.setdefault(i, 0)
+                n_items[i] += 1
                 for j in items:
                     if i == j:
                         continue
-                    C.setdefault(i, {})
-                    C[i].setdefault(j, 0)
-                    C[i][j] += 1
-        for i, related_items in C.items():
+                    c_items.setdefault(i, {})
+                    c_items[i].setdefault(j, 0)
+                    c_items[i][j] += 1
+        for i, related_items in c_items.items():
             self.item_sim_best.setdefault(i, dict())
             for j, cij in related_items.items():
-                self.item_sim_best[i][j] = cij / math.sqrt(N[i] * N[j] * 1.0)
+                self.item_sim_best[i][j] = cij / math.sqrt(n_items[i] * n_items[j] * 1.0)
 
-    def recommend(self, user, train=None, k=8, nitem=10):
+    def recommend(self, user, train=None, k=8, n_item=10):
+        """
+        为指定用户推荐item。通过用户所有的物品，查找与每个物品最相似的k个物品，
+        对物品数量和相似度进行加权排序，得到最合适的n_item个物品。
+        :param user:
+        :param train:
+        :param k:
+        :param n_item:
+        :return:
+        """
         train = train or self.train_data
         rank = dict()
         ru = train.get(user, {})
@@ -310,12 +323,12 @@ class ItemBasedCF(object):
                     continue
                 rank.setdefault(j, 0)
                 rank[j] += pi * wj
-        return dict(sorted(rank.items(), key=lambda x: x[1], reverse=True)[0:nitem])
+        return dict(sorted(rank.items(), key=lambda x: x[1], reverse=True)[0:n_item])
 
-    def recall_and_precision(self, train=None, test=None, k=8, nitem=10):
+    def recall_and_precision(self, train=None, test=None, k=8, n_item=10):
         """
-        Get the recall and precision, the method you want to know is listed
-        in the page 43
+        Get the recall and precision.
+        计算召回率和准确率。
         """
         train = train or self.train_data
         test = test or self.test_data
@@ -324,15 +337,23 @@ class ItemBasedCF(object):
         precision = 0
         for user in train.keys():
             tu = test.get(user, {})
-            rank = self.recommend(user, train=train, k=k, nitem=nitem)
+            rank = self.recommend(user, train=train, k=k, n_item=n_item)
             for item, _ in rank.items():
                 if item in tu:
                     hit += 1
             recall += len(tu)
-            precision += nitem
+            precision += n_item
         return hit / (recall * 1.0), hit / (precision * 1.0)
 
-    def coverage(self, train=None, test=None, k=8, nitem=10):
+    def coverage(self, train=None, test=None, k=8, n_item=10):
+        """
+        计算覆盖率。
+        :param train:
+        :param test:
+        :param k:
+        :param n_item:
+        :return:
+        """
         train = train or self.train_data
         test = test or self.test_data
         recommend_items = set()
@@ -340,15 +361,15 @@ class ItemBasedCF(object):
         for user in train.keys():
             for item in train[user].keys():
                 all_items.add(item)
-            rank = self.recommend(user, train, k=k, nitem=nitem)
+            rank = self.recommend(user, train, k=k, n_item=n_item)
             for item, _ in rank.items():
                 recommend_items.add(item)
         return len(recommend_items) / (len(all_items) * 1.0)
 
     def popularity(self, train=None, test=None, k=8, nitem=10):
         """
-        Get the popularity
-        the algorithm on page 44
+        Get the popularity.
+        计算流行度。
         """
         train = train or self.train_data
         test = test or self.test_data
@@ -361,7 +382,7 @@ class ItemBasedCF(object):
         n = 0
         # 对每一个user进行推荐 计算其流行度
         for user in train.keys():
-            rank = self.recommend(user, train, k=k, nitem=nitem)
+            rank = self.recommend(user, train, k=k, n_item=nitem)
             for item, _ in rank.items():
                 ret += math.log(1 + item_popularity[item])
                 n += 1
