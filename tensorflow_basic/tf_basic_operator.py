@@ -657,6 +657,40 @@ def test_embedding():
     common_logger.info("input_embedding:\n{0}".format(input_embedding_value))
 
 
+def test_fill():
+    """
+    测试tf.fill操作。
+    :return:
+    """
+    tf_fill_1 = tf.fill([2, 3], 5)
+    test_run_sess("tf fill", tf_fill_1)
+
+
+def test_argmax_equal():
+    """
+    测试tf.argmax操作。
+    :return:
+    """
+    # 一维向量argmax
+    tf_val1 = tf.constant([2, 1, 3, 4])
+    tf_argmax1 = tf.argmax(tf_val1)
+    test_run_sess("tf_argmax", tf_argmax1)
+
+    # 二维向量argmax
+    tf_val2 = tf.constant([[1, 2, 3, 4],
+                           [2, 1, 4, 3],
+                           [4, 1, 2, 3],
+                           [2, 4, 3, 1]])
+    tf_argmax2 = tf.argmax(tf_val2, axis=0)
+    test_run_sess("tf_argmax", tf_argmax2)
+    tf_argmax3 = tf.argmax(tf_val2, axis=1)
+    test_run_sess("tf_argmax", tf_argmax3)
+
+    # 计算equal
+    tf_equal = tf.equal(tf.cast(tf_val1, tf.int32), tf.cast(tf_argmax2, tf.int32))
+    test_run_sess("tf_equal", tf_equal)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -676,6 +710,8 @@ if __name__ == "__main__":
     # test_average_pooling_1d()
     # test_average_pooling_2d()
     # test_average_pooling_3d()
-    test_embedding()
+    # test_embedding()
+    # test_fill()
+    test_argmax_equal()
     pass
 
