@@ -8,6 +8,10 @@ import zipfile
 import tarfile
 import shutil
 import config.common_config as com_config
+from util.log_util import LoggerUtil
+
+# 日志器
+common_logger = LoggerUtil.get_common_logger()
 
 
 def make_zip(src_dir, zip_filename):
@@ -17,24 +21,24 @@ def make_zip(src_dir, zip_filename):
     :param zip_filename:
     :return:
     """
-    zipf = zipfile.ZipFile(zip_filename, 'w', compression=zipfile.zlib.DEFLATED)
+    zip_f = zipfile.ZipFile(zip_filename, 'w', compression=zipfile.zlib.DEFLATED)
     pre_len = len(os.path.dirname(src_dir))
     for parent, dir_names, file_names in os.walk(src_dir):
         for filename in file_names:
             file_path = os.path.join(parent, filename)
             # 相对路径
             arc_name = file_path[pre_len:].strip(os.path.sep)
-            zipf.write(file_path, arc_name)
-    zipf.close()
+            zip_f.write(file_path, arc_name)
+    zip_f.close()
 
 
 def make_targz(output_filename, src_dir):
     """
     # 一次性打包整个根目录。空子目录会被打包。
     # 如果只打包不压缩，将"w:gz"参数改为"w:"或"w"即可。
-    :param output_filename: 
+    :param output_filename:
     :param src_dir:
-    :return: 
+    :return:
     """
     with tarfile.open(output_filename, "w:gz") as tar:
         tar.add(src_dir, arcname=os.path.basename(src_dir))
@@ -65,11 +69,11 @@ def unzip_dir(zip_filename, unzip_dirname):
     """
     full_zip_filename = os.path.abspath(zip_filename)
     full_unzip_dirname = os.path.abspath(unzip_dirname)
-    print("Start to unzip file %s to folder %s ..." % (zip_filename, unzip_dirname))
+    common_logger.info("Start to unzip file {0} to folder {1} ...".format(zip_filename, unzip_dirname))
 
     # Check input ...
     if not os.path.exists(full_zip_filename):
-        print("Dir/File %s is not exist, Press any key to quit..." % full_zip_filename)
+        common_logger.info("Dir/File {0} is not exist, Press any key to quit...".format(full_zip_filename))
         input_str = input()
         return
 
@@ -77,7 +81,7 @@ def unzip_dir(zip_filename, unzip_dirname):
         os.mkdir(full_unzip_dirname)
     else:
         if os.path.isfile(full_unzip_dirname):
-            print("File %s is exist, are you sure to delet it first ? [Y/N]" % full_unzip_dirname)
+            common_logger.info("File {0} is exist, are you sure to delet it first ? [Y/N]".format(full_unzip_dirname))
             while 1:
                 input_str = input()
                 if input_str == "N" or input_str == "n":
@@ -85,29 +89,29 @@ def unzip_dir(zip_filename, unzip_dirname):
                 else:
                     if input_str == "Y" or input_str == "y":
                         os.remove(full_unzip_dirname)
-                        print("Continue to unzip files ...")
+                        common_logger.info("Continue to unzip files ...")
                         break
 
     # Start extract files ...
-    srcZip = zipfile.ZipFile(full_unzip_dirname, "r")
-    for eachfile in srcZip.namelist():
-        if eachfile.endswith('/'):
+    src_zip = zipfile.ZipFile(full_unzip_dirname, "r")
+    for each_file in src_zip.namelist():
+        if each_file.endswith('/'):
             # is a directory
-            print('Unzip directory %s ...' % each_filename)
+            common_logger.info('Unzip directory {0} ...'.format(each_filename))
 
-            os.makedirs(os.path.normpath(os.path.join(full_unzip_dirname, eachfile)))
+            os.makedirs(os.path.normpath(os.path.join(full_unzip_dirname, each_file)))
             continue
-        print("Unzip file %s ..." % eachfile)
+        common_logger.info("Unzip file {0} ...".format(each_file))
 
-        each_filename = os.path.normpath(os.path.join(full_unzip_dirname, eachfile))
+        each_filename = os.path.normpath(os.path.join(full_unzip_dirname, each_file))
         each_dirname = os.path.dirname(each_filename)
         if not os.path.exists(each_dirname):
             os.makedirs(each_dirname)
         fd = open(each_filename, "wb")
-        fd.write(srcZip.read(eachfile))
+        fd.write(src_zip.read(each_file))
         fd.close()
-    srcZip.close()
-    print("Unzip file succeed!")
+    src_zip.close()
+    common_logger.info("Unzip file succeed!")
 
 
 def test_file_archive():
