@@ -49,7 +49,15 @@ def test_json_load():
     """
     json_str = '{"name":"mike", "age":"12"}'
     json_obj = json.loads(json_str)
+
+    if 'name2' in json_obj:
+        common_logger.info("json obj has name2")
+    else:
+        common_logger.info("json obj not has name2")
+
     common_logger.info("json obj element name:{0}".format(json_obj.get("name")))
+    common_logger.info("json obj element name:{0}".format(json_obj.get("name2")))
+    # common_logger.info("json obj element name:{0}".format(json_obj["name2"]))
     common_logger.info("json obj type:{0}".format(str(type(json_obj))))
 
 
@@ -88,6 +96,6 @@ def test_json_date_time():
 if __name__ == '__main__':
     pass
     # test_json_dump()
-    # test_json_load()
-    test_json_date_time()
+    test_json_load()
+    # test_json_date_time()
 
