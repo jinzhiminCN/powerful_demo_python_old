@@ -691,6 +691,59 @@ def test_argmax_equal():
     test_run_sess("tf_equal", tf_equal)
 
 
+def test_sparse():
+    """
+    测试SparseTensor。
+    :return:
+    """
+    # 位置索引
+    idx = [[0, 0, 0],
+           [0, 1, 0],
+           [1, 0, 3],
+           [1, 1, 2],
+           [1, 1, 3],
+           [1, 2, 1]]
+    # 张量值
+    val = [0, 10, 103, 112, 113, 114]
+    # 张量形状
+    shape = [2, 3, 4]
+
+    # 创建稀疏张量
+    sp = tf.SparseTensor(idx, val, shape)
+
+    # 将SparseTensor转换为稠密的布尔指示器张量
+    si = tf.sparse_to_indicator(sp, 200)
+    si_val = si[1, 1, 113]
+
+    test_run_sess("sparse indicator", si)
+    test_run_sess("sparse indicator value", si_val)
+
+    # 稀疏张量叠加
+    sp1 = tf.SparseTensor([[0, 2], [1, 0], [1, 1]], ['a', 'b', 'c'], [2, 3])
+    sp2 = tf.SparseTensor([[0, 1], [0, 2]], ['d', 'e'], [2, 4])
+    sp3 = tf.SparseTensor([[0, 1], [0, 2]], ['d', 'e'], [2, 3])
+    con1 = tf.sparse_concat(1, [sp1, sp2], name=None)
+    con2 = tf.sparse_concat(0, [sp1, sp3], name=None)
+
+    test_run_sess("sparse concat1", con1)
+    test_run_sess("sparse concat2", con2)
+
+    # 稀疏张量重排序，成为以行为主的标准排序
+    sp4 = tf.SparseTensor([[0, 3], [0, 1], [3, 1], [2, 0]], ['b', 'a', 'd', 'c'], [4, 5])
+    rsp4 = tf.sparse_reorder(sp4)
+
+    # 保留部分元素
+    to_retain = [True, False, False, True]
+    rsp5 = tf.sparse_retain(sp4, to_retain)
+
+    # 填充空行
+    rsp6 = tf.sparse_fill_empty_rows(sp4, 'zz')
+
+    test_run_sess("rsp4", rsp4)
+    test_run_sess("rsp5", rsp5)
+    test_run_sess("rsp6", rsp6)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -712,6 +765,7 @@ if __name__ == "__main__":
     # test_average_pooling_3d()
     # test_embedding()
     # test_fill()
-    test_argmax_equal()
+    # test_argmax_equal()
+    test_sparse()
     pass
 
