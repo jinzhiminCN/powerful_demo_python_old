@@ -267,7 +267,8 @@ def logistic_regression_model():
     for step in range(500):
         sess.run(train)
         if step % 100 == 0:
-            common_logger.info("step:{0}, weight:{1}, bias:{2}".format(step, sess.run(w).flatten(), sess.run(b).flatten()))
+            common_logger.info("step:{0}, weight:{1}, bias:{2}"
+                               .format(step, sess.run(w).flatten(), sess.run(b).flatten()))
 
     common_logger.info("Coefficients of tensorflow (input should be standardized): K={0}, b={1}".format(
         sess.run(w).flatten(), sess.run(b).flatten()))
@@ -300,11 +301,11 @@ def test_train():
 
 def logistic_reg_model():
     """
-
+    逻辑回归模型测试。
     :return:
     """
-    # x_train = [[1.0, 2.0], [2.0, 1.0], [2.0, 3.0], [3.0, 5.0], [1.0, 3.0], [4.0, 2.0], [7.0, 3.0], [4.0, 5.0],
-    #            [11.0, 3.0], [8.0, 7.0]]
+    # x_train = [[1.0, 2.0], [2.0, 1.0], [2.0, 3.0], [3.0, 5.0], [1.0, 3.0],
+    #            [4.0, 2.0], [7.0, 3.0], [4.0, 5.0], [11.0, 3.0], [8.0, 7.0]]
     # y_train = [1, 1, 0, 1, 0, 1, 0, 1, 0, 1]
     # x_train = [[1.0] + val for val in x_train]
     # x_data, y_data = x_train, y_train

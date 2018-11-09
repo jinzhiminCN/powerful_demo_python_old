@@ -78,23 +78,23 @@ def get_tf_dataset(dataset_text_file, batch_size=64, channels=3, crop_size=[28, 
 
         return image, label
 
-    def read_labeled_image_list(dataset_text_file):
+    def read_labeled_image_list(filename_label_file):
         """
         读取带标签的图像列表。
-        :param dataset_text_file:
+        :param filename_label_file: 存放文件名和标签的文本文件
         :return:
         """
-        filenames = []
-        labels = []
+        filename_list = []
+        label_list = []
 
-        with open(dataset_text_file, "r", encoding="utf-8") as f_l:
+        with open(filename_label_file, "r", encoding="utf-8") as f_l:
             filenames_labels = f_l.readlines()
 
         for filename_label in filenames_labels:
             filename_array = filename_label.split(" ")
-            filenames.append(filename_array[0])
-            labels.append(int(filename_array[1].strip("\n")))
-        return filenames, labels
+            filename_list.append(filename_array[0])
+            label_list.append(int(filename_array[1].strip("\n")))
+        return filename_list, label_list
 
     def read_img_path_label_list(dir_path):
         """
