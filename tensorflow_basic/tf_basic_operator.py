@@ -744,6 +744,34 @@ def test_sparse():
     test_run_sess("rsp6", rsp6)
 
 
+def test_pad():
+    """
+    测试tf.pad操作。
+    :return:
+    """
+    t_val = tf.constant([[1, 2, 3], [4, 5, 6]])
+    paddings = tf.constant([[1, 1, ], [2, 2]])
+
+    pad_constant = tf.pad(t_val, paddings, "CONSTANT")
+    pad_reflect = tf.pad(t_val, paddings, "REFLECT")
+    pad_symmetric = tf.pad(t_val, paddings, "SYMMETRIC")
+
+    test_run_sess("pad_constant", pad_constant)
+    test_run_sess("pad_reflect", pad_reflect)
+    test_run_sess("pad_symmetric", pad_symmetric)
+
+    # 更换padding
+    paddings = tf.constant([[2, 2, ], [1, 1]])
+
+    pad_constant = tf.pad(t_val, paddings, "CONSTANT")
+    pad_reflect = tf.pad(t_val, paddings, "REFLECT")
+    pad_symmetric = tf.pad(t_val, paddings, "SYMMETRIC")
+
+    test_run_sess("pad_constant", pad_constant)
+    test_run_sess("pad_reflect", pad_reflect)
+    test_run_sess("pad_symmetric", pad_symmetric)
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -766,6 +794,7 @@ if __name__ == "__main__":
     # test_embedding()
     # test_fill()
     # test_argmax_equal()
-    test_sparse()
+    # test_sparse()
+    test_pad()
     pass
 
