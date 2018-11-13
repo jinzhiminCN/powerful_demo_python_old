@@ -38,4 +38,11 @@ SMTP_SENDER = "test"
 # smtp password
 SMTP_PASSWD = "test"
 
+# ftp host
+FTP_HOST = "127.0.0.1"
+# ftp sender
+FTP_USER = "ftpuser"
+# ftp password
+FTP_PASSWD = "123456"
+
 
