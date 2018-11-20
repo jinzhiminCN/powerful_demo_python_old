@@ -420,8 +420,7 @@ def test_distance():
                             [0, 1, 2],
                             [1, 2, 0],
                             [1, 1, 1],
-                            [0, 1, -1],
-                           ])
+                            [0, 1, -1]])
     t_const = tf.constant([1, 1, 1])
     t_abs = tf.abs(tf.add(t_vector, tf.negative(t_const)))
     t_square = tf.square(tf.add(t_vector, tf.negative(t_const)))
@@ -691,6 +690,20 @@ def test_argmax_equal():
     test_run_sess("tf_equal", tf_equal)
 
 
+def test_const():
+    """
+    tensorflow常量测试。
+    :return:
+    """
+    # 常量
+    v_const = tf.constant(-5)
+    # 绝对值
+    v_abs = tf.abs(v_const)
+
+    test_run_sess("v_const", v_const)
+    test_run_sess("v_abs", v_abs)
+
+
 def test_sparse():
     """
     测试SparseTensor。
@@ -772,6 +785,129 @@ def test_pad():
     test_run_sess("pad_symmetric", pad_symmetric)
 
 
+def test_depthwise_conv2d():
+    """
+    测试depthwise操作。
+    :return:
+    """
+    img1 = tf.constant(value=[[[[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]]]],
+                       dtype=tf.float32)
+    img2 = tf.constant(value=[[[[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]]]],
+                       dtype=tf.float32)
+    img = tf.concat(values=[img1, img2], axis=3)
+
+    # filter
+    filter1 = tf.constant(value=0, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter2 = tf.constant(value=1, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter3 = tf.constant(value=2, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter4 = tf.constant(value=3, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter_out1 = tf.concat(values=[filter1, filter2], axis=2)
+    filter_out2 = tf.concat(values=[filter3, filter4], axis=2)
+    filter_all = tf.concat(values=[filter_out1, filter_out2], axis=3)
+
+    # 一个channel特征和一个filter特征进行卷积，然后相加合成一个新的特征
+    conv2d_out_img = tf.nn.conv2d(input=img, filter=filter_all,
+                           strides=[1, 1, 1, 1], padding='VALID')
+
+    # 一个channel特征和一个filter特征进行卷积
+    depthwise_out_img = tf.nn.depthwise_conv2d(input=img,
+                                           filter=filter_all,
+                                           strides=[1, 1, 1, 1],
+                                           rate=[1, 1],
+                                           padding='VALID')
+
+    test_run_sess("img", img)
+    test_run_sess("filter_out1", filter_out1)
+    test_run_sess("filter_out2", filter_out2)
+    test_run_sess("filter_all", filter_all)
+    test_run_sess("conv2d_out_img", conv2d_out_img)
+    test_run_sess("depthwise_out_img", depthwise_out_img)
+
+
+def test_separable_conv2d():
+    """
+    测试可分离卷积。
+    :return:
+    """
+    img1 = tf.constant(value=[[[[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]],
+                               [[1], [2], [3], [4]]]],
+                       dtype=tf.float32)
+    img2 = tf.constant(value=[[[[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]],
+                               [[1], [1], [1], [1]]]],
+                       dtype=tf.float32)
+    img = tf.concat(values=[img1, img2], axis=3)
+
+    # filter
+    filter1 = tf.constant(value=0, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter2 = tf.constant(value=1, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter3 = tf.constant(value=2, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter4 = tf.constant(value=3, shape=[3, 3, 1, 1], dtype=tf.float32)
+    filter_out1 = tf.concat(values=[filter1, filter2], axis=2)
+    filter_out2 = tf.concat(values=[filter3, filter4], axis=2)
+    filter_all = tf.concat(values=[filter_out1, filter_out2], axis=3)
+
+    point_filter = tf.constant(value=1, shape=[1, 1, 4, 6], dtype=tf.float32)
+
+    # depthwise
+    depthwise_out_img = tf.nn.depthwise_conv2d(input=img, filter=filter_all,
+                                               strides=[1, 1, 1, 1], rate=[1, 1], padding='VALID')
+    test_run_sess("depthwise_out_img", depthwise_out_img)
+
+    # conv2d
+    conv2d_out_img = tf.nn.conv2d(input=depthwise_out_img,
+                                  filter=point_filter, strides=[1, 1, 1, 1], padding='VALID')
+    test_run_sess("depthwise_conv2d_out_img", conv2d_out_img)
+
+    # 可分离卷积
+    separable_out_img = tf.nn.separable_conv2d(input=img,
+                                               depthwise_filter=filter_all,
+                                               pointwise_filter=point_filter,
+                                               strides=[1, 1, 1, 1],
+                                               rate=[1, 1], padding='VALID')
+    test_run_sess("separable_out_img", separable_out_img)
+
+    # layer的可分离卷积
+    depthwise_init = tf.constant_initializer(tf.cast(filter_all, "float32"))
+    v_point_filter = tf.constant(value=1.0, shape=[1, 1, 4], dtype=tf.float32)
+    point_filter_init = tf.constant_initializer(v_point_filter)
+    out_image_layer = tf.layers.separable_conv2d(img,
+                                                 filters=2,
+                                                 kernel_size=1,
+                                                 padding="valid",
+                                                 strides=[1, 1],
+                                                 use_bias=False)
+    test_run_sess("out_image_layer", out_image_layer)
+
+
+def test_lrn():
+    """
+    测试lrn。
+    :return:
+    """
+    x = np.array([i for i in range(1, 33)]).reshape([2, 2, 2, 4])
+    # Local Response Normalization
+    y = tf.nn.lrn(input=x, depth_radius=2, bias=0, alpha=1, beta=1)
+
+    with tf.Session() as sess:
+        common_logger.info(x)
+        common_logger.info('#############')
+        common_logger.info(y.eval())
+
+    common_logger.info("{0}, {1}, {2}".format(25/26, 26/27, 27/28))
+    common_logger.info("{0}, {1}, {2}"
+                       .format(0.01231527/0.00923952, 0.00923952/0.00959488, 0.00959488/0.01279123))
+
+
 if __name__ == "__main__":
     # test_reshape()
     # test_transpose()
@@ -795,6 +931,9 @@ if __name__ == "__main__":
     # test_fill()
     # test_argmax_equal()
     # test_sparse()
-    test_pad()
+    # test_pad()
+    # test_depthwise_conv2d()
+    # test_separable_conv2d()
+    test_lrn()
     pass
 
