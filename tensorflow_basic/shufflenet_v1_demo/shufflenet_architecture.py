@@ -8,7 +8,13 @@ import math
 from tensorflow_basic.shufflenet_v1_demo.shufflenet_constant import *
 
 
-def _channel_shuffle(x_data, groups):
+def channel_shuffle(x_data, groups):
+    """
+    通道重排，重新洗牌通道。
+    :param x_data:
+    :param groups:
+    :return:
+    """
     height, width, in_channels = x_data.shape.as_list()[1:]
     in_channels_per_group = int(in_channels/groups)
 
@@ -26,20 +32,21 @@ def _channel_shuffle(x_data, groups):
     return x_data
 
 
-def _mapping(
-        X, is_training, num_classes=200,
+def graph_mapping(
+        x_data, is_training, num_classes=200,
         groups=3, dropout=0.5,
         complexity_scale_factor=0.75):
-    """A ShuffleNet implementation.
+    """
+    A ShuffleNet implementation.
 
     Arguments:
-        X: A float tensor with shape [batch_size, image_height, image_width, 3].
+        x_data: A float tensor with shape [batch_size, image_height, image_width, 3].
         is_training: A boolean, whether the network is in the training mode.
         num_classes: An integer.
         groups: An integer, number of groups in group convolutions,
             only possible values are: 1, 2, 3, 4, 8.
-        dropout: A floar number, dropout rate before the last linear layer.
-        complexity_scale_factor: A floar number, to customize the network
+        dropout: A float number, dropout rate before the last linear layer.
+        complexity_scale_factor: A float number, to customize the network
             to a desired complexity you can apply a scale factor,
             in the original paper they are considering
             scale factor values: 0.25, 0.5, 1.0.
@@ -66,20 +73,17 @@ def _mapping(
     out_channels = int(out_channels * complexity_scale_factor)
 
     with tf.variable_scope('features'):
-
         with tf.variable_scope('stage1'):
-
             with tf.variable_scope('conv1'):
-                result = conv(X, 24, kernel=3, stride=FIRST_STRIDE)
+                result = _conv(x_data, 24, kernel=3, stride=FIRST_STRIDE)
 
-            result = batch_norm(result, is_training)
+            result = _batch_norm(result, is_training)
             result = nonlinearity(result)
             # in the original paper they are not using batch_norm and relu here
 
             result = max_pooling(result)
 
         with tf.variable_scope('stage2'):
-
             with tf.variable_scope('unit1'):
                 result = first_shufflenet_unit(
                     result, is_training, groups, out_channels
@@ -92,7 +96,6 @@ def _mapping(
             # number of channels in 'result' is out_channels
 
         with tf.variable_scope('stage3'):
-
             with tf.variable_scope('unit1'):
                 result = shufflenet_unit(result, is_training, groups, stride=2)
 
@@ -103,7 +106,6 @@ def _mapping(
             # number of channels in 'result' is 2*out_channels
 
         with tf.variable_scope('stage4'):
-
             with tf.variable_scope('unit1'):
                 result = shufflenet_unit(result, is_training, groups, stride=2)
 
@@ -116,10 +118,10 @@ def _mapping(
     with tf.variable_scope('classifier'):
         result = global_average_pooling(result)
 
-        result = dropout(result, is_training, dropout)
+        result = _dropout(result, is_training, dropout)
         # in the original paper they are not using dropout here
 
-        logits = affine(result, num_classes)
+        logits = _affine(result, num_classes)
 
     return logits
 
@@ -133,7 +135,7 @@ def nonlinearity(x_data):
     return tf.nn.relu(x_data, name='ReLU')
 
 
-def dropout(x_data, is_training, rate=0.5):
+def _dropout(x_data, is_training, rate=0.5):
     """
     随机丢弃。
     :param x_data:
@@ -154,7 +156,7 @@ def dropout(x_data, is_training, rate=0.5):
     return result
 
 
-def batch_norm(x_data, is_training):
+def _batch_norm(x_data, is_training):
     """
     Batch Normalization操作。
     :param x_data:
@@ -205,7 +207,7 @@ def avg_pooling(x_data):
     )
 
 
-def conv(x_data, filters, kernel=3, stride=1):
+def _conv(x_data, filters, kernel=3, stride=1):
     """
     卷积操作。
     :param x_data:
@@ -214,6 +216,7 @@ def conv(x_data, filters, kernel=3, stride=1):
     :param stride:
     :return:
     """
+    # 输入通道数
     in_channels = x_data.shape.as_list()[-1]
 
     # uniform initialization
@@ -234,7 +237,7 @@ def conv(x_data, filters, kernel=3, stride=1):
     )
 
 
-def group_conv(x_data, filters, groups, kernel=1, stride=1):
+def _group_conv(x_data, filters, groups, kernel=1, stride=1):
     """
     分组卷积操作。
     :param x_data:
@@ -258,7 +261,7 @@ def group_conv(x_data, filters, groups, kernel=1, stride=1):
 
     # split channels
     x_channel_splits = tf.split(x_data, [in_channels_per_group] * groups, axis=3)
-    k_filter_splits = tf.split(conv_kernel, [filters_per_group]*groups, axis=3)
+    k_filter_splits = tf.split(conv_kernel, [filters_per_group] * groups, axis=3)
 
     results = []
 
@@ -293,69 +296,88 @@ def depthwise_conv(x_data, kernel=3, stride=1):
 
 
 def shufflenet_unit(x_data, is_training, groups=3, stride=1):
-
+    """
+    shufflenet单元。
+    :param x_data:
+    :param is_training:
+    :param groups:
+    :param stride:
+    :return:
+    """
     in_channels = x_data.shape.as_list()[3]
     result = x_data
 
     with tf.variable_scope('g_conv_1'):
-        result = group_conv(result, in_channels, groups)
-        result = batch_norm(result, is_training)
+        result = _group_conv(result, in_channels, groups)
+        result = _batch_norm(result, is_training)
         result = nonlinearity(result)
 
     with tf.variable_scope('channel_shuffle_2'):
-        result = _channel_shuffle(result, groups)
+        result = channel_shuffle(result, groups)
 
     with tf.variable_scope('dw_conv_3'):
         result = depthwise_conv(result, stride=stride)
-        result = batch_norm(result, is_training)
+        result = _batch_norm(result, is_training)
 
     with tf.variable_scope('g_conv_4'):
-        result = group_conv(result, in_channels, groups)
-        result = batch_norm(result, is_training)
+        result = _group_conv(result, in_channels, groups)
+        result = _batch_norm(result, is_training)
 
     if stride < 2:
         result = tf.add(result, x_data)
     else:
-        x_data = avg_pooling(x_data)
-        result = tf.concat([result, x_data], 3)
+        avg_pool_x_data = avg_pooling(x_data)
+        result = tf.concat([result, avg_pool_x_data], 3)
 
     result = nonlinearity(result)
     return result
 
 
-# first shufflenet unit is different from the rest
 def first_shufflenet_unit(x_data, is_training, groups, out_channels):
-
+    """
+    first shufflenet unit is different from the rest. 第一个shufflenet单元。
+    :param x_data:
+    :param is_training:
+    :param groups:
+    :param out_channels:
+    :return:
+    """
     in_channels = x_data.shape.as_list()[3]
-    result = x_data
+    group_result = x_data
     out_channels -= in_channels
 
     with tf.variable_scope('g_conv_1'):
-        result = group_conv(result, out_channels, groups=1)
-        result = batch_norm(result, is_training)
-        result = nonlinearity(result)
+        group_result = _group_conv(group_result, out_channels, groups=1)
+        group_result = _batch_norm(group_result, is_training)
+        group_result = nonlinearity(group_result)
 
     with tf.variable_scope('dw_conv_2'):
-        result = depthwise_conv(result, stride=2)
-        result = batch_norm(result, is_training)
+        group_result = depthwise_conv(group_result, stride=2)
+        group_result = _batch_norm(group_result, is_training)
 
     with tf.variable_scope('g_conv_3'):
-        result = group_conv(result, out_channels, groups)
-        result = batch_norm(result, is_training)
+        group_result = _group_conv(group_result, out_channels, groups)
+        group_result = _batch_norm(group_result, is_training)
 
-    x_data = avg_pooling(x_data)
-    result = tf.concat([result, x_data], 3)
+    avg_pool_x_data = avg_pooling(x_data)
+    result = tf.concat([group_result, avg_pool_x_data], 3)
     result = nonlinearity(result)
     return result
 
 
-def affine(x_data, size):
+def _affine(x_data, size):
+    """
+    仿射变换。
+    :param x_data:
+    :param size:
+    :return:
+    """
     input_dim = x_data.shape.as_list()[1]
 
     # uniform initialization
     max_val = math.sqrt(6.0/input_dim)
 
-    W = tf.get_variable(
+    weight = tf.get_variable(
         'kernel', [input_dim, size], tf.float32,
         tf.random_uniform_initializer(-max_val, max_val)
     )
@@ -365,7 +387,7 @@ def affine(x_data, size):
         tf.zeros_initializer()
     )
 
-    return tf.nn.bias_add(tf.matmul(x_data, W), b)
+    return tf.nn.bias_add(tf.matmul(x_data, weight), b)
 
 
 if __name__ == "__main__":

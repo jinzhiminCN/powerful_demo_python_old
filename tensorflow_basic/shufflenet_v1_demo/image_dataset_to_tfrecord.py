@@ -19,7 +19,7 @@ common_logger = LoggerUtil.get_common_logger()
 imagenet_dir = shufflenet_constant.TINY_IMAGENET_DIR
 train_dir = os.path.join(imagenet_dir, "training")
 val_dir = os.path.join(imagenet_dir, "validation")
-save_dir = os.path.join(imagenet_dir, "tfrecord")
+tfrecord_dir = os.path.join(imagenet_dir, "tfrecord")
 train_tfrecord_path = shufflenet_constant.TRAIN_TFRECORD_PATH
 val_tfrecord_path = shufflenet_constant.VAL_TFRECORD_PATH
 
@@ -140,12 +140,12 @@ def convert(folder, encoder, tfrecords_filename):
 def main():
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(val_dir, exist_ok=True)
-    os.makedirs(save_dir, exist_ok=True)
+    os.makedirs(tfrecord_dir, exist_ok=True)
 
     encoder = create_encoder(train_dir)
     # now you can get a folder's name from a class index
 
-    np.save(os.path.join(save_dir, 'class_encoder.npy'), encoder)
+    np.save(os.path.join(tfrecord_dir, 'class_encoder.npy'), encoder)
     convert(train_dir, encoder, train_tfrecord_path)
     convert(val_dir, encoder, val_tfrecord_path)
 
