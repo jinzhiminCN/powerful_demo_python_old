@@ -36,22 +36,23 @@ def test_ndarray_attribute():
     """
     # ndarray是n维数组
     a = np.arange(15).reshape(3, 5)
-    common_logger.info("array a:\n{0}".format(a))
-    common_logger.info("array a type:\n{0}".format(type(a)))
-    common_logger.info("array a shape:\n{0}".format(a.shape))
-    common_logger.info("array a ndim:\n{0}".format(a.ndim))
-    common_logger.info("array a dtype:\n{0}".format(a.dtype.name))
+    log_print_value("array a", a)
+    log_print_value("array a type", type(a))
+    log_print_value("array a shape", a.shape)
+    log_print_value("array a ndim", a.ndim)
+    log_print_value("array a dtype", a.dtype.name)
     # 数组元素在内存中的字节数
-    common_logger.info("array a itemsize:\n{0}".format(a.itemsize))
+    log_print_value("array a itemsize", a.itemsize)
 
     # matrix是2位数组，已经不再推荐使用。But It is no longer recommended to use this class
     m = np.asmatrix(a)
     m2 = np.matrix([[1, 2], [3, 4]])
     m3 = np.mat([[10, 20], [30, 40]])
-    common_logger.info("matrix m:\n{0}".format(m))
-    common_logger.info("matrix m type:\n{0}".format(type(m)))
-    common_logger.info("matrix m2:\n{0}".format(m2))
-    common_logger.info("matrix m3:\n{0}".format(m3))
+
+    log_print_value("matrix m", m)
+    log_print_value("matrix m type", type(m))
+    log_print_value("matrix m2", m2)
+    log_print_value("matrix m3", m3)
 
 
 def test_ndarray_transform():
@@ -62,13 +63,13 @@ def test_ndarray_transform():
     # ndarray变成list
     nd_a = np.arange(15).reshape(3, 5)
     arr_list = nd_a.tolist()
-    common_logger.info("array list:\n{0}".format(arr_list))
-    common_logger.info("array type:\n{0}".format(type(arr_list)))
+    log_print_value("array list", arr_list)
+    log_print_value("array type", type(arr_list))
 
     # 转置操作
     nd_a_t = nd_a.transpose()
-    common_logger.info("transpose:\n{0}".format(nd_a_t))
-    common_logger.info("na_a.T:\n{0}".format(nd_a.T))
+    log_print_value("transpose", nd_a_t)
+    log_print_value("na_a.T", nd_a.T)
 
 
 def test_ndarray_operator():
@@ -81,43 +82,35 @@ def test_ndarray_operator():
 
     # 矩阵逆运算
     nd_a_inverse = np.linalg.inv(nd_a)
-    common_logger.info("inverse:\n{0}".format(nd_a_inverse))
+    log_print_value("inverse", nd_a_inverse)
+
     # 广义逆矩阵 (ATA)-1AT
     nd_a_pinv = np.linalg.pinv(nd_a)
-    common_logger.info("pseudo inverse:\n{0}".format(nd_a_pinv))
+    log_print_value("pseudo inverse", nd_a_pinv)
+
     # 估计线性模型中的系数
     # coef_a = np.linalg.lstsq(nd_a, nd_y)
-    # common_logger.info("nd_a nd_y coef:\n{0}".format(coef_a))
+    # log_print_value("nd_a nd_y coef", coef_a))
+
     # 矩阵的行列式
     nd_a_det = np.linalg.det(nd_a)
-    common_logger.info("det:\n{0}".format(nd_a_det))
+    log_print_value("det", nd_a_det)
+
     # 解形如aX=b的线性方程组
     nd_a_solve = np.linalg.solve(nd_a, nd_b)
-    common_logger.info("solve:\n{0}".format(nd_a_solve))
+    log_print_value("solve", nd_a_solve)
+
     # 矩阵的特征值
     nd_a_eigvals = np.linalg.eigvals(nd_a)
-    common_logger.info("eigval:\n{0}".format(nd_a_eigvals))
+    log_print_value("eigval", nd_a_eigvals)
+
     # 特征值和特征向量
     nd_a_eig = np.linalg.eig(nd_a)
-    common_logger.info("eig:\n{0}".format(nd_a_eig))
+    log_print_value("eig", nd_a_eig)
+
     # svd分解
     nd_a_svd = np.linalg.svd(nd_a)
-    common_logger.info("svd:\n{0}".format(nd_a_svd))
-
-
-def test_arg_function():
-    """
-    测试arg相关的函数方法。
-    :return:
-    """
-    np_values = np.array([9, 4, 3, 6, 2, 7, 10, 15, 11])
-    # 计算对train_x排序的索引值
-    sort_index = np_values.argsort()
-    sort_index2 = np.argsort(np_values)
-
-    common_logger.info("np_values:\n{0}".format(np_values))
-    common_logger.info("sort_index:\n{0}".format(sort_index))
-    common_logger.info("sort_index2:\n{0}".format(sort_index2))
+    log_print_value("svd", nd_a_svd)
 
 
 def test_stack():
@@ -129,10 +122,39 @@ def test_stack():
     b = np.floor(10 * np.random.random((2, 2)))
     v_stack = np.vstack((a, b))
     h_stack = np.hstack((a, b))
-    common_logger.info("random a:\n{0}".format(a))
-    common_logger.info("random b:\n{0}".format(b))
-    common_logger.info("v_stack:\n{0}".format(v_stack))
-    common_logger.info("h_stack:\n{0}".format(h_stack))
+
+    log_print_value("random a", a)
+    log_print_value("random b", b)
+    log_print_value("v_stack", v_stack)
+    log_print_value("h_stack", h_stack)
+
+
+def log_print_value(np_name, np_value):
+    """
+    使用日志打印numpy的运算结果。
+    :param np_name
+    :param np_value
+    :return:
+    """
+    common_logger.info("{0}:\n{1}".format(np_name, np_value))
+
+
+def test_reshape():
+    """
+    测试reshape操作。
+    :return:
+    """
+    x = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
+    groups = 3
+    channels_per_group = int(len(x)/groups)
+
+    x_reshape = x.reshape(groups, channels_per_group)
+    x_reshape = x_reshape.T
+    x_reshape = x_reshape.reshape(groups * channels_per_group)
+    log_print_value("reshape", x_reshape)
+
+    x_reshape = x.reshape(2, 2, 3)
+    log_print_value("reshape", x_reshape)
 
 
 if __name__ == "__main__":
@@ -141,5 +163,6 @@ if __name__ == "__main__":
     # test_ndarray_transform()
     # test_ndarray_operator()
     # test_stack()
-    test_arg_function()
+    # test_arg_function()
+    test_reshape()
     pass
