@@ -3,7 +3,7 @@
 # ==============================================================================
 # 测试numpy的相关方法。
 # ==============================================================================
-
+import scipy.stats as stats
 import numpy as np
 from util.log_util import LoggerUtil
 
@@ -157,6 +157,63 @@ def test_reshape():
     log_print_value("reshape", x_reshape)
 
 
+def test_statistic():
+    """
+    测试统计量。
+    :return:
+    """
+    data = np.array([0, 1, 2, 3, 4, 5, 6, 7, 7, 8, 9, 10, 11])
+    # 计算均值
+    data_mean = np.mean(data)
+    # 计算中位数
+    data_median = np.median(data)
+    # 计算众数
+    data_mode = stats.mode(data)
+
+    log_print_value("mean", data_mean)
+    log_print_value("median", data_median)
+    log_print_value("mode", data_mode)
+
+    # 极差 最大值和最小值的发散程度指标
+    data_ptp = np.ptp(data)
+    # 方差
+    data_var = np.var(data)
+    # 标准差
+    data_std = np.std(data)
+    # 变异系数 标准差的无量纲处理
+    data_var_coef = np.std(data) / np.mean(data)
+
+    log_print_value("ptp", data_ptp)
+    log_print_value("var", data_var)
+    log_print_value("std", data_std)
+    log_print_value("var_coef", data_var_coef)
+
+    # 计算z-score
+    for value in data:
+        z_score = get_z_score(value, data_mean, data_std)
+        common_logger.info(z_score)
+
+    data2 = np.array([0, 1, 3, 2, 6, 5, 4, 7, 9, 7, 8, 10, 12])
+    data_list = np.array([data, data2])
+
+    # 计算两组数的协方差
+    data_cov_bias = np.cov(data_list, bias=True)
+    data_cov = np.cov(data_list, bias=False)
+    data_corrcoef = np.corrcoef(data_list)
+
+    log_print_value("cov_bias", data_cov_bias)
+    log_print_value("cov", data_cov)
+    log_print_value("corrcoef", data_corrcoef)
+
+
+def get_z_score(value, data_mean, data_std):
+    """
+    Z-Score，测量值距均值相差的标准差数目。通常来说，z-分数的绝对值大于3将视为异常。
+    :return:
+    """
+    return (value - data_mean) / data_std
+
+
 if __name__ == "__main__":
     # test_create_ndarray()
     # test_ndarray_attribute()
@@ -164,5 +221,6 @@ if __name__ == "__main__":
     # test_ndarray_operator()
     # test_stack()
     # test_arg_function()
-    test_reshape()
+    # test_reshape()
+    test_statistic()
     pass
