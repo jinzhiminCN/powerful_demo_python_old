@@ -8,10 +8,13 @@
 # 的分类（Iris Setosa（山鸢尾）、Iris Versicolour（杂色鸢尾），Iris Virginica（维吉尼亚鸢尾））
 # ==============================================================================
 from numpy import vstack, array, nan, log1p
+from scipy.stats import pearsonr
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, \
     Binarizer, OneHotEncoder, Imputer, PolynomialFeatures, FunctionTransformer
-from sklearn.feature_selection import VarianceThreshold
+from sklearn.feature_selection import VarianceThreshold, SelectKBest
+from sklearn.feature_selection import chi2
+from minepy import MINE
 from util.log_util import LoggerUtil
 
 # 日志器
@@ -115,6 +118,18 @@ def test_data_transformer():
     log_print_value("function_transform_data:", function_transform_data)
 
 
+def mic(x, y):
+    """
+    mic
+    :param x:
+    :param y:
+    :return:
+    """
+    m = MINE()
+    m.compute_score(x, y)
+    return m.mic()
+
+
 def test_filter():
     """
     测试特征选择的过滤法。按照发散性或者相关性对各个特征进行评分，设定阈值或者待选择阈值的个数，选择特征。
@@ -124,7 +139,28 @@ def test_filter():
     variance_filter_data = VarianceThreshold(threshold=3).fit_transform(iris.data)
     log_print_value("variance_filter_data:", variance_filter_data)
 
+    # 选择K个最好的特征，返回选择特征后的数据
+    # 第一个参数为计算评估特征是否好的函数，该函数输入特征矩阵和目标向量，输出二元组（评分，P值）的数组，
+    # 数组第i项为第i个特征的评分和P值。在此定义为计算相关系数
+    # 参数k为选择的特征个数
+    pearson_k_best_data = SelectKBest(lambda x_mat, y_mat: array(
+        list(map(lambda x: pearsonr(x, y_mat), x_mat.T))).T[0], k=2)\
+        .fit_transform(iris.data, iris.target)
+    # func_pearson = lambda x_mat, y_mat: array(
+    #     list(map(lambda x: pearsonr(x, y_mat), x_mat.T))).T
+    # result = func_pearson(iris.data, iris.target)
+    # log_print_value("result:", result)
+    log_print_value("pearson_k_best_data:", pearson_k_best_data)
 
+    # 经典的卡方检验是检验定性自变量对定性因变量的相关性。假设自变量有N种取值，因变量有M种取值，
+    # 考虑自变量等于i且因变量等于j的样本频数的观察值与期望的差距，构建统计量。
+    chi2_k_best_data = SelectKBest(chi2, k=2).fit_transform(iris.data, iris.target)
+    log_print_value("chi2_k_best_data:", chi2_k_best_data)
+
+    # 经典的互信息也是评价定性自变量对定性因变量的相关性的
+    mic_k_best_data = SelectKBest(lambda x_mat, y_mat: array(list(map(lambda x : mic(x, y_mat), x_mat.T))).T, k=2)\
+        .fit_transform(iris.data, iris.target)
+    log_print_value("mic_k_best_data:", mic_k_best_data)
 
 
 if __name__ == "__main__":
