@@ -12,8 +12,12 @@ from scipy.stats import pearsonr
 from sklearn.datasets import load_iris
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, Normalizer, \
     Binarizer, OneHotEncoder, Imputer, PolynomialFeatures, FunctionTransformer
-from sklearn.feature_selection import VarianceThreshold, SelectKBest
+from sklearn.feature_selection import VarianceThreshold, SelectKBest, RFE, SelectFromModel
 from sklearn.feature_selection import chi2
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.decomposition import PCA
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from minepy import MINE
 from util.log_util import LoggerUtil
 
@@ -132,7 +136,8 @@ def mic(x, y):
 
 def test_filter():
     """
-    测试特征选择的过滤法。按照发散性或者相关性对各个特征进行评分，设定阈值或者待选择阈值的个数，选择特征。
+    测试特征选择的过滤法。
+    Filter, 按照发散性或者相关性对各个特征进行评分，设定阈值或者待选择阈值的个数，选择特征。
     :return:
     """
     # 方差选择法，返回值为特征选择后的数据，参数threshold为方差的阈值
@@ -158,9 +163,105 @@ def test_filter():
     log_print_value("chi2_k_best_data:", chi2_k_best_data)
 
     # 经典的互信息也是评价定性自变量对定性因变量的相关性的
-    mic_k_best_data = SelectKBest(lambda x_mat, y_mat: array(list(map(lambda x : mic(x, y_mat), x_mat.T))).T, k=2)\
+    mic_k_best_data = SelectKBest(lambda x_mat, y_mat: array(list(map(lambda x: mic(x, y_mat), x_mat.T))).T, k=2)\
         .fit_transform(iris.data, iris.target)
     log_print_value("mic_k_best_data:", mic_k_best_data)
+
+
+def test_wrapper():
+    """
+    测试特征选择的包装法。
+    Wrapper, 根据目标函数（通常是预测效果评分），每次选择若干特征，或者排除若干特征。
+    :return:
+    """
+    # 递归特征消除法，返回特征选择后的数据，recursive feature elimination
+    # 参数estimator为基模型
+    # 参数n_features_to_select为选择的特征个数
+    feature_data = RFE(estimator=LogisticRegression(), n_features_to_select=2).fit_transform(iris.data, iris.target)
+    log_print_value("feature_data:", feature_data)
+
+
+class LR(LogisticRegression):
+    def __init__(self, threshold=0.01, dual=False, tol=1e-4, C=1.0,
+                 fit_intercept=True, intercept_scaling=1, class_weight=None,
+                 random_state=None, solver='liblinear', max_iter=100,
+                 multi_class='ovr', verbose=0, warm_start=False, n_jobs=1):
+
+        # 权值相近的阈值
+        self.threshold = threshold
+        LogisticRegression.__init__(self, penalty='l1', dual=dual, tol=tol, C=C,
+                                    fit_intercept=fit_intercept, intercept_scaling=intercept_scaling,
+                                    class_weight=class_weight, random_state=random_state, solver=solver,
+                                    max_iter=max_iter, multi_class=multi_class, verbose=verbose,
+                                    warm_start=warm_start, n_jobs=n_jobs)
+        # 使用同样的参数创建L2逻辑回归
+        self.l2 = LogisticRegression(penalty='l2', dual=dual, tol=tol, C=C, fit_intercept=fit_intercept,
+                                     intercept_scaling=intercept_scaling, class_weight=class_weight,
+                                     random_state=random_state, solver=solver, max_iter=max_iter,
+                                     multi_class=multi_class, verbose=verbose, warm_start=warm_start, n_jobs=n_jobs)
+
+    def fit(self, X, y, sample_weight=None):
+        # 训练L1逻辑回归
+        super(LR, self).fit(X, y, sample_weight=sample_weight)
+        self.coef_old_ = self.coef_.copy()
+        # 训练L2逻辑回归
+        self.l2.fit(X, y, sample_weight=sample_weight)
+
+        cnt_of_row, cnt_of_col = self.coef_.shape
+        # 权值系数矩阵的行数对应目标值的种类数目
+        for i in range(cnt_of_row):
+            for j in range(cnt_of_col):
+                coef = self.coef_[i][j]
+                # L1逻辑回归的权值系数不为0
+                if coef != 0:
+                    idx = [j]
+                    # 对应在L2逻辑回归中的权值系数
+                    coef1 = self.l2.coef_[i][j]
+                    for k in range(cnt_of_col):
+                        coef2 = self.l2.coef_[i][k]
+                        # 在L2逻辑回归中，权值系数之差小于设定的阈值，且在L1中对应的权值为0
+                        if abs(coef1-coef2) < self.threshold and j != k and self.coef_[i][k] == 0:
+                            idx.append(k)
+                    # 计算这一类特征的权值系数均值
+                    mean = coef / len(idx)
+                    self.coef_[i][idx] = mean
+        return self
+
+
+def test_embedded():
+    """
+    测试特征选择的嵌入法。
+    Embedded, 先使用某些机器学习的算法和模型进行训练，得到各个特征的权值系数，根据系数从大到小选择特征。
+    :return:
+    """
+    # 带L1惩罚项的逻辑回归作为基模型的特征选择
+    feature_data = SelectFromModel(LogisticRegression(penalty="l1", C=0.1))\
+        .fit_transform(iris.data, iris.target)
+    log_print_value("feature_data:", feature_data)
+
+    # 带L1和L2惩罚项的逻辑回归作为基模型的特征选择，参数threshold为权值系数之差的阈值
+    feature_data = SelectFromModel(LR(threshold=0.5, C=0.1))\
+        .fit_transform(iris.data, iris.target)
+    log_print_value("feature_data:", feature_data)
+
+    # GBDT作为基模型的特征选择
+    feature_data = SelectFromModel(GradientBoostingClassifier())\
+        .fit_transform(iris.data, iris.target)
+    log_print_value("feature_data:", feature_data)
+
+
+def test_reduce_dimension():
+    """
+    测试特征的降维。
+    :return:
+    """
+    # 主成分分析法，返回降维后的数据。参数n_components为主成分数目。
+    feature_data = PCA(n_components=2).fit_transform(iris.data)
+    log_print_value("feature_data:", feature_data)
+
+    # 线性判别分析法，返回降维后的数据。参数n_components为降维后的维数。
+    feature_data = LinearDiscriminantAnalysis(n_components=2).fit_transform(iris.data, iris.target)
+    log_print_value("feature_data:", feature_data)
 
 
 if __name__ == "__main__":
@@ -170,7 +271,10 @@ if __name__ == "__main__":
     # test_one_hot()
     # test_missing_value()
     # test_data_transformer()
-    test_filter()
+    # test_filter()
+    # test_wrapper()
+    # test_embedded()
+    test_reduce_dimension()
     pass
 
 
