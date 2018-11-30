@@ -3,6 +3,13 @@
 # ==============================================================================
 # 测试threading的相关方法。
 # https://www.cnblogs.com/tkqasn/p/5700281.html
+# Lock（指令锁）: Lock是可用的最低级的同步指令。Lock处于锁定状态时，不被特定的线程拥有。
+# Lock包含两种状态——锁定和非锁定，以及两个基本的方法。可以认为Lock有一个锁定池，当线程请求锁时，
+# 将线程至于池中，直到获得锁后出池。池中的线程处于状态图中的同步阻塞状态。
+# RLock（可重入锁）: RLock是一个可以被同一个线程请求多次的同步指令。RLock使用了“拥有的线程”和
+# “递归等级”的概念，处于锁定状态时，RLock被某个线程拥有。拥有RLock的线程可以再次调用acquire()，
+# 释放锁时需要调用release()相同次数。可以认为RLock包含一个锁定池和一个初始值为0的计数器，
+# 每次成功调用 acquire()/release()，计数器将+1/-1，为0时锁处于未锁定状态。
 # ==============================================================================
 import time
 import threading
@@ -11,6 +18,31 @@ from util.log_util import LoggerUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
+
+# threading.local是一个小写字母开头的类，用于管理 thread-local（线程局部的）数据。
+# 对于同一个local，线程无法访问其他线程设置的属性；线程设置的属性不会被其他线程设置的同名属性替换。
+# 可以把local看成是一个“线程-属性字典”的字典，local封装了从自身使用线程作为key检索对应的属性字典、
+# 再使用属性名作为key检索属性值的细节。
+# 设置线程局部变量
+local_value = threading.local()
+# 账号余额
+balance = 0
+# 使用锁
+lock = threading.Lock()
+
+
+def change_it(n):
+    """
+    修改balance的值。
+    :param n:
+    :return:
+    """
+    # 先存后取，结果应该为0:
+    global balance
+    balance = balance + n
+    time.sleep(0.001)
+    balance = balance - n
+    # common_logger.info('current balance: {0}'.format(balance))
 
 
 def loop_action():
@@ -134,9 +166,99 @@ def test_thread_join():
     common_logger.info("持续时长：{0}".format(end_time - start_time))
 
 
+def print_local_name():
+    """
+    获取当前线程关联的name。
+    :return:
+    """
+    name = local_value.name
+    common_logger.info('Hello, {0} (in {1})'
+                       .format(name, threading.current_thread().name))
+
+
+def show_thread_name(name):
+    """
+    绑定ThreadLocal的name。
+    :param name:
+    :return:
+    """
+    local_value.name = name
+    print_local_name()
+
+
+def test_thread_local():
+    """
+    测试threading.local类的使用。
+    :return:
+    """
+    t1 = threading.Thread(target=show_thread_name, args=('Alice',), name='Thread-A')
+    t2 = threading.Thread(target=show_thread_name, args=('Bob',), name='Thread-B')
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+
+def change_balance(val):
+    """
+    多次修改balance。
+    :param val:
+    :return:
+    """
+    for i in range(1000):
+        change_it(val)
+
+
+def change_lock_balance(val):
+    """
+    多次修改带锁的balance。
+    :param val:
+    :return:
+    """
+    for i in range(100000):
+        # 先要获取锁:
+        lock.acquire()
+        try:
+            change_it(val)
+        finally:
+            # 使用完要释放锁:
+            lock.release()
+
+
+def test_balance():
+    """
+    测试修改balance。
+    :return:
+    """
+    t1 = threading.Thread(target=change_balance, args=(5,))
+    t2 = threading.Thread(target=change_balance, args=(8,))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+    common_logger.info('finally balance: '.format(balance))
+
+
+def test_balance_with_lock():
+    """
+    测试带锁地修改balance。
+    :return:
+    """
+    t1 = threading.Thread(target=change_lock_balance, args=(5,))
+    t2 = threading.Thread(target=change_lock_balance, args=(8,))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+    common_logger.info('finally balance: '.format(balance))
+
+
 if __name__ == "__main__":
     # loop_action()
     # test_multi_cpu_threading()
     # test_thread_start()
-    test_thread_join()
+    # test_thread_join()
+    # test_thread_local()
+    # test_balance()
+    test_balance_with_lock()
     pass
