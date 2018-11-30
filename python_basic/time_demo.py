@@ -11,7 +11,7 @@ from util.log_util import LoggerUtil
 
 # 日志器
 common_logger = LoggerUtil.get_common_logger()
-
+# 默认时间格式
 default_time_format = '%Y-%m-%d %H:%M:%S'
 
 
