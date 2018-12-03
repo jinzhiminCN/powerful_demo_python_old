@@ -3,13 +3,17 @@
 # ==============================================================================
 # 测试threading的相关方法。
 # https://www.cnblogs.com/tkqasn/p/5700281.html
-# Lock（指令锁）: Lock是可用的最低级的同步指令。Lock处于锁定状态时，不被特定的线程拥有。
-# Lock包含两种状态——锁定和非锁定，以及两个基本的方法。可以认为Lock有一个锁定池，当线程请求锁时，
-# 将线程至于池中，直到获得锁后出池。池中的线程处于状态图中的同步阻塞状态。
-# RLock（可重入锁）: RLock是一个可以被同一个线程请求多次的同步指令。RLock使用了“拥有的线程”和
-# “递归等级”的概念，处于锁定状态时，RLock被某个线程拥有。拥有RLock的线程可以再次调用acquire()，
-# 释放锁时需要调用release()相同次数。可以认为RLock包含一个锁定池和一个初始值为0的计数器，
-# 每次成功调用 acquire()/release()，计数器将+1/-1，为0时锁处于未锁定状态。
+#     Lock（指令锁）: Lock是可用的最低级的同步指令。Lock处于锁定状态时，不被特定的线程拥有。Lock
+# 包含两种状态——锁定和非锁定，以及两个基本的方法。可以认为Lock有一个锁定池，当线程请求锁时，将线程置
+# 于池中，直到获得锁后出池。池中的线程处于状态图中的同步阻塞状态。
+#     RLock（可重入锁）: RLock是一个可以被同一个线程请求多次的同步指令。RLock使用了“拥有的线程”和
+# “递归等级”的概念，处于锁定状态时，RLock被某个线程拥有。拥有RLock的线程可以再次调用acquire()，释
+# 放锁时需要调用release()相同次数。可以认为RLock包含一个锁定池和一个初始值为0的计数器，每次成功调用
+# acquire()/release()，计数器将+1/-1，为0时锁处于未锁定状态。
+#     Condition（条件变量）：Condition通常与一个锁关联。需要在多个Condition中共享一个锁时，可以传
+# 递一个Lock/RLock实例给构造方法，否则它将自己生成一个RLock实例。可以认为，除了Lock带有的锁定池外，
+# Condition还包含一个等待池，池中的线程处于等待阻塞状态，直到另一个线程调用notify()/notifyAll()通
+# 知；得到通知后线程进入锁定池等待锁定。
 # ==============================================================================
 import time
 import threading
@@ -30,6 +34,15 @@ balance = 0
 # 使用锁
 lock = threading.Lock()
 
+# 商品
+product = None
+# 条件变量
+con = threading.Condition()
+condition = threading.Condition()
+# 商品数量
+products = 0
+product_list = None
+
 
 def change_it(n):
     """
@@ -40,9 +53,9 @@ def change_it(n):
     # 先存后取，结果应该为0:
     global balance
     balance = balance + n
-    time.sleep(0.001)
+    time.sleep(0.5)
     balance = balance - n
-    # common_logger.info('current balance: {0}'.format(balance))
+    common_logger.info('current balance: {0}'.format(balance))
 
 
 def loop_action():
@@ -251,6 +264,154 @@ def test_balance_with_lock():
     t1.join()
     t2.join()
     common_logger.info('finally balance: '.format(balance))
+
+
+def produce():
+    """
+    生产者方法
+    :return:
+    """
+
+    global product
+
+    if con.acquire():
+        while True:
+            if product is None:
+                common_logger.info('produce...')
+                product = 'anything'
+
+                # 通知消费者，商品已经生产
+                con.notify()
+
+            # 等待通知
+            con.wait()
+            time.sleep(2)
+
+
+def consume():
+    """
+    消费者方法
+    :return:
+    """
+
+    global product
+
+    if con.acquire():
+        while True:
+            if product is not None:
+                common_logger.info('consume...')
+                product = None
+
+                # 通知生产者，商品已经没了
+                con.notify()
+
+            # 等待通知
+            con.wait()
+            time.sleep(2)
+
+
+def test_condition():
+    """
+    测试条件变量。
+    :return:
+    """
+    t1 = threading.Thread(target=produce)
+    t2 = threading.Thread(target=consume)
+    t2.start()
+    t1.start()
+
+
+class Producer(threading.Thread):
+    def run(self):
+        global products
+        while True:
+            if condition.acquire():
+                if products < 10:
+                    products += 1
+                    common_logger.info("Producer({0}):deliver one, now products:{1}"
+                                       .format(self.name, products))
+                    # 不释放锁定，因此需要下面一句
+                    condition.notify()
+                    condition.release()
+                else:
+                    common_logger.info("Producer({0}):already 10, stop deliver, now products:{1}"
+                                       .format(self.name, products))
+                    # 自动释放锁定
+                    condition.wait()
+                time.sleep(2)
+
+
+class Consumer(threading.Thread):
+    def run(self):
+        global products
+        while True:
+            if condition.acquire():
+                if products > 1:
+                    products -= 1
+                    common_logger.info("Consumer({0}):consume one, now products:{1}"
+                                       .format(self.name, products))
+                    condition.notify()
+                    condition.release()
+                else:
+                    common_logger.info("Consumer({0}):only 1, stop consume, products:{1}"
+                                       .format(self.name, products))
+                    condition.wait()
+                time.sleep(2)
+
+
+def test_producer_consumer():
+    """
+
+    :return:
+    """
+    for p in range(0, 2):
+        p = Producer()
+        p.start()
+
+    for c in range(0, 3):
+        c = Consumer()
+        c.start()
+
+
+def do_set():
+    if condition.acquire():
+        while product_list is None:
+            condition.wait()
+        for i in range(len(product_list))[::-1]:
+            product_list[i] = 1
+        condition.release()
+
+
+def do_print():
+    if condition.acquire():
+        while product_list is None:
+            condition.wait()
+        for i in product_list:
+            common_logger.info(i)
+        condition.release()
+
+
+def do_create():
+    global product_list
+    if condition.acquire():
+        if product_list is None:
+            product_list = [0 for i in range(10)]
+            condition.notifyAll()
+        condition.release()
+
+
+def test_producer_consumer2():
+    """
+    测试生产者消费者。
+    :return:
+    """
+    t_set = threading.Thread(target=do_set, name='tset')
+    t_print = threading.Thread(target=do_print, name='tprint')
+    t_create = threading.Thread(target=do_create, name='tcreate')
+    t_set.start()
+    t_print.start()
+    t_create.start()
+
 
 
 if __name__ == "__main__":
