@@ -41,7 +41,7 @@ con = threading.Condition()
 condition = threading.Condition()
 # 商品数量
 products = 0
-product_list = None
+product_list = []
 
 
 def change_it(n):

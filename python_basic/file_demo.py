@@ -81,7 +81,7 @@ def unzip_dir(zip_filename, unzip_dirname):
         os.mkdir(full_unzip_dirname)
     else:
         if os.path.isfile(full_unzip_dirname):
-            common_logger.info("File {0} is exist, are you sure to delet it first ? [Y/N]".format(full_unzip_dirname))
+            common_logger.info("File {0} is exist, are you sure to delete it first ? [Y/N]".format(full_unzip_dirname))
             while 1:
                 input_str = input()
                 if input_str == "N" or input_str == "n":
