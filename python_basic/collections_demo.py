@@ -23,9 +23,9 @@ def test_namedtuple():
     # 并且规定了tuple元素的个数，可以用属性而不是索引来引用tuple的某个元素。
     Point = namedtuple('Point', ['x', 'y'])
     point = Point(1, 2)
-    print("Point:{0}, p.x={1}, p.y={2}.".format(point, point.x, point.y))
-    print("is Point:{}".format(isinstance(point, Point)))
-    print("is tuple:{}".format(isinstance(point, tuple)))
+    common_logger.info("Point:{0}, p.x={1}, p.y={2}.".format(point, point.x, point.y))
+    common_logger.info("is Point:{}".format(isinstance(point, Point)))
+    common_logger.info("is tuple:{}".format(isinstance(point, tuple)))
 
 
 def test_dequeue():
@@ -36,24 +36,24 @@ def test_dequeue():
     q = deque(['a', 'b', 'c'])
     q.append('x')
     q.appendleft('y')
-    print("DeQueue:".format(q))
+    common_logger.info("DeQueue:".format(q))
 
     # rotate旋转
     q = deque(range(0, 10))
     for i in range(0, 10):
         q.rotate(1)
-        print("{0}: {1}".format(i, q))
+        common_logger.info("{0}: {1}".format(i, q))
 
     q = deque(range(0, 10))
     for i in range(0, 10):
         q.rotate(i)
-        print("{0}: {1}".format(i, q))
+        common_logger.info("{0}: {1}".format(i, q))
 
     # 走马灯
     fancy_loading = deque('>-------Hello-------------')
 
     while True:
-        print('\r{}'.format(''.join(fancy_loading)))
+        common_logger.info('\r{}'.format(''.join(fancy_loading)))
         fancy_loading.rotate(1)
         sys.stdout.flush()
         time.sleep(0.08)
@@ -67,7 +67,7 @@ def test_counter():
     count = Counter()
     for ch in 'programming':
         count[ch] += 1
-    print(count)
+    common_logger.info(count)
 
     # 频率测试
     s = '''A Counter is a dict subclass for counting hashable objects. It is an unordered collection
@@ -77,7 +77,7 @@ def test_counter():
 
     count = Counter(s)
     # 获取出现频率最高的5个字符
-    print("出现频率最高的5个字符：{0}".format(count.most_common(5)))
+    common_logger.info("出现频率最高的5个字符：{0}".format(count.most_common(5)))
 
 
 def test_ordered_dict():
@@ -89,18 +89,18 @@ def test_ordered_dict():
 
     # dict的Key是无序的
     d = dict(items)
-    print("dict elements:{0}".format(d))
+    common_logger.info("dict elements:{0}".format(d))
 
     # OrderedDict的Key是有序的
     od = OrderedDict(items)
-    print("ordered dict elements:{0}".format(od))
+    common_logger.info("ordered dict elements:{0}".format(od))
 
     od = OrderedDict()
     od['z'] = 1
     od['y'] = 2
     od['x'] = 3
     list_dict = list(od.keys()) # 按照插入的Key的顺序返回
-    print("ordered dict keys:{0}".format(list_dict))
+    common_logger.info("ordered dict keys:{0}".format(list_dict))
 
 
 def test_default_dict():
@@ -112,8 +112,8 @@ def test_default_dict():
     """
     dd = defaultdict(lambda: 'N/A')
     dd['key1'] = 'abc'
-    print("key1:", dd['key1'])
-    print('key2:', dd['key2'])
+    common_logger.info("key1:".format(dd['key1']))
+    common_logger.info("key2:".format(dd['key2']))
 
 
 if __name__ == "__main__":
@@ -123,4 +123,3 @@ if __name__ == "__main__":
     # test_counter()
     # test_ordered_dict()
     # test_default_dict()
-
