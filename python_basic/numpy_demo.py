@@ -214,6 +214,43 @@ def get_z_score(value, data_mean, data_std):
     return (value - data_mean) / data_std
 
 
+def test_add_mask():
+    """
+    测试numpy加法和掩模。
+    :return:
+    """
+    np_val1 = np.array([[255, 255, 33, 88, 22], [255, 0, 223, 23, 198]])
+    np_val2 = np.array([[128, 23, 12, 190, 231], [109, 2, 3, 55, 148]])
+    np_val_add = np.add(np_val1, np_val2)
+    log_print_value("np_val_add", np_val_add)
+
+    np_val_int8 = np_val_add.astype(np.int8)
+    log_print_value("np_val_int8", np_val_int8)
+
+    np_val_unsign_int8 = np_val_add.astype(np.uint8)
+    log_print_value("np_val_unsign_int8", np_val_unsign_int8)
+
+    np_val_mask = np_val_add.copy()
+    np.putmask(np_val_mask, [np_val_mask > 255], [255])
+    log_print_value("np_val_mask", np_val_mask)
+
+    np_val_filter = np_val_add.copy()
+    np_val_filter[np_val_filter > 255] = 255
+    log_print_value("np_val_filter", np_val_filter)
+
+    np_val_clip = np_val_add.copy()
+    np_val_clip = np.clip(np_val_clip, 0, 254)
+    log_print_value("np_val_clip", np_val_clip)
+
+    np_val_min = np_val_add.copy()
+    np.minimum(np_val_min, 255, np_val_min)
+    log_print_value("np_val_min", np_val_min)
+
+    np_val_max = np_val_add.copy()
+    np.maximum(np_val_max, 0, np_val_max)
+    log_print_value("np_val_max", np_val_max)
+
+
 if __name__ == "__main__":
     # test_create_ndarray()
     # test_ndarray_attribute()
@@ -222,5 +259,6 @@ if __name__ == "__main__":
     # test_stack()
     # test_arg_function()
     # test_reshape()
-    test_statistic()
+    # test_statistic()
+    test_add_mask()
     pass

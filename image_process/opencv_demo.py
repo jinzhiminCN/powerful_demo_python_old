@@ -133,7 +133,7 @@ def test_threshold():
     h, w = gray.shape[:2]
     m = np.reshape(gray, [1, w*h])
     mean = m.sum()/(w*h)
-    print("mean:", mean)
+    common_logger.info("mean:{0}".format(mean))
     ret, binary3 = cv2.threshold(gray, mean, 255, cv2.THRESH_BINARY)
     # show_image(binary)
     images = [image1, gray, binary1, binary2, binary3]
@@ -147,16 +147,16 @@ def test_image_resize():
     """
     image_file = os.path.join(image_dir, "demo1.png")
     image = cv2.imread(image_file)
-    print("图像的类型：{0}".format(type(image)))
-    print("size {0}, shape {1}".format(image_file, image.size, image.shape))
+    common_logger.info("图像的类型：{0}".format(type(image)))
+    common_logger.info("size {0}, shape {1}".format(image_file, image.size, image.shape))
 
     # 图像缩放
     img_resize1 = cv2.resize(image, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    print("size {0}, shape {1}".format(img_resize1.size, img_resize1.shape))
+    common_logger.info("size {0}, shape {1}".format(img_resize1.size, img_resize1.shape))
     show_image(img_resize1)
 
     img_resize2 = cv2.resize(image, (300, 200), interpolation=cv2.INTER_AREA)
-    print("size {0}, shape {1}".format(img_resize2.size, img_resize2.shape))
+    common_logger.info("size {0}, shape {1}".format(img_resize2.size, img_resize2.shape))
     show_image(img_resize2)
 
 
