@@ -116,10 +116,58 @@ def test_default_dict():
     common_logger.info("key2:".format(dd['key2']))
 
 
+class Missing(dict):
+    def __missing__(self, key):
+        return 'missing_value'
+
+
+class MissingCount(dict):
+    def __missing__(self, key):
+        return 0
+
+
+def test_dict_method():
+    """
+    测试dict的方法。
+    :return:
+    """
+    strings = ('puppy', 'kitten', 'puppy', 'puppy',
+               'weasel', 'puppy', 'kitten', 'puppy')
+    counts = {}
+
+    # 1. 直接用元素运算
+    # try:
+    #     for kw in strings:
+    #         counts[kw] += 1
+    # except KeyError as err:
+    #     common_logger.info("出现异常！", err)
+
+    # 2. 预先判断是否有元素
+    for kw in strings:
+        if kw not in counts:
+            counts[kw] = 1
+        else:
+            counts[kw] += 1
+    common_logger.info(counts)
+
+    # 3. 使用setdefault()
+    for kw in strings:
+        counts.setdefault(kw, 0)
+        counts[kw] += 1
+    common_logger.info(counts)
+
+    # 4. 使用__missing__
+    counts = MissingCount()
+    for kw in strings:
+        counts[kw] += 1
+    common_logger.info(counts)
+
+
 if __name__ == "__main__":
     pass
     # test_namedtuple()
-    test_dequeue()
+    # test_dequeue()
     # test_counter()
     # test_ordered_dict()
     # test_default_dict()
+    test_dict_method()
