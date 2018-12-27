@@ -7,6 +7,8 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import urllib
+from requests.auth import HTTPDigestAuth
+
 from urllib import request, parse
 from urllib.error import *
 from util.log_util import LoggerUtil
@@ -102,10 +104,24 @@ def test_phone_get():
         common_logger.info('Data:{0}'.format(data.decode('utf-8')))
 
 
+def test_request_auth():
+    """
+    测试request的认证请求。
+    :return:
+    """
+    response = requests.get('https://api.github.com/user', auth=('user', 'pass'))
+    common_logger.info(response.text)
+
+    url = 'http://httpbin.org/digest-auth/auth/user/pass'
+    response = requests.get(url, auth=HTTPDigestAuth('user', 'pass'))
+    common_logger.info(response.text)
+
+
 if __name__ == "__main__":
     # post_request()
     # page_content()
     # download_image()
     # test_urlopen()
-    test_phone_get()
+    # test_phone_get()
+    test_request_auth()
     pass
