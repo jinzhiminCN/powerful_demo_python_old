@@ -2,6 +2,7 @@
 
 # ==============================================================================
 # 测试requests的基本用法。
+# https://blog.csdn.net/qq_25134989/article/details/78800209
 # ==============================================================================
 import requests
 import re
@@ -117,11 +118,64 @@ def test_request_auth():
     common_logger.info(response.text)
 
 
+def download_image_from_url(url, file_path):
+    """
+    从URL中下载文件，保存到file_path。
+    :param url:下载文件的url
+    :param file_path:保存图像的文件路径
+    :return:
+    """
+    # 发送请求
+    response = requests.get(url)
+    common_logger.info("URL:{0}，请求状态:{1}".format(url, response.status_code))
+
+    # 获取的文本实际上是图片的二进制文本
+    img = response.content
+    # 拷贝到本地文件 w 写 b 二进制，wb代表写入二进制文本
+    with open(file_path, 'wb') as file:
+        file.write(img)
+
+
+def test_request_basic_method():
+    """
+    测试请求的基本方法。
+    :return:
+    """
+    response = requests.post("http://httpbin.org/post")
+    common_logger.info("content:{0}".format(response.content))
+    common_logger.info("text:{0}".format(response.text))
+    common_logger.info("status code:{0}".format(response.status_code))
+
+    response = requests.put("http://httpbin.org/put")
+    common_logger.info("text:{0}".format(response.text))
+
+    response = requests.delete("http://httpbin.org/delete")
+    common_logger.info("text:{0}".format(response.text))
+
+    response = requests.head("http://httpbin.org/get")
+    common_logger.info("text:{0}".format(response.text))
+
+    response = requests.options("http://httpbin.org/get")
+    common_logger.info("text:{0}".format(response.text))
+
+    payload = {'key1': 'value1', 'key2': 'value2'}
+    response = requests.get("http://httpbin.org/get", params=payload)
+    common_logger.info("url:{0}".format(response.url))
+
+    payload = {'key1': 'value1', 'key2': ['value2', 'value3']}
+    response = requests.get("http://httpbin.org/get", params=payload)
+    common_logger.info("url:{0}".format(response.url))
+
+    response = requests.post("http://httpbin.org/post", data=payload)
+    common_logger.info("text:{0}".format(response.text))
+
+
 if __name__ == "__main__":
     # post_request()
     # page_content()
     # download_image()
     # test_urlopen()
     # test_phone_get()
-    test_request_auth()
+    # test_request_auth()
+    test_request_basic_method()
     pass
