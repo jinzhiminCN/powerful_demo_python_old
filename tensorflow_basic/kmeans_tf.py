@@ -7,6 +7,9 @@ import tensorflow as tf
 import os
 import math
 import numpy as np
+import matplotlib.pyplot as plt
+import pandas
+import seaborn
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.contrib.factorization import KMeans
 import config.common_config as com_config
@@ -245,7 +248,81 @@ def test_train():
     kmeans.train_mnist()
 
 
+def kmeans_test():
+    """
+    测试 kmeans
+    :return:
+    """
+    # 构造数据
+    num_puntos = 2000
+    conjunto_puntos = []
+
+    for i in range(num_puntos):
+        if np.random.random() < 0.5:
+            conjunto_puntos.append([np.random.normal(0.0, 0.9), np.random.normal(0.0, 0.9)])
+        else:
+            conjunto_puntos.append([np.random.normal(3.0, 0.5), np.random.normal(1.0, 0.5)])
+
+    # 可视化显示
+    # df = pandas.DataFrame({
+    #     "x": [v[0] for v in conjunto_puntos],
+    #     "y": [v[1] for v in conjunto_puntos],
+    # })
+    # seaborn.lmplot("x", "y", data=df, fit_reg=False, height=6)
+    # plt.show()
+
+    # kmeans算法
+    # 数据准备
+    vectors = tf.constant(conjunto_puntos)
+    # 初始化中心点
+    k_num = 4
+    centroides = tf.Variable(tf.slice(tf.random_shuffle(vectors), [0, 0], [k_num, -1]))
+
+    expanded_vectors = tf.expand_dims(vectors, 0)
+    expanded_centroides = tf.expand_dims(centroides, 1)
+
+    # 确定每个数据最接近的分类
+    # assignments = tf.argmin(tf.reduce_sum(tf.square(tf.subtract(expanded_vectors, expanded_centroides)), 2), 0)
+    diff = tf.subtract(expanded_vectors, expanded_centroides)
+    sqr = tf.square(diff)
+    distances = tf.reduce_sum(sqr, 2)
+    assignments = tf.argmin(distances, 0)
+
+    # 按类别计算均值
+    mean_list = [tf.reduce_mean(
+        tf.gather(vectors, tf.reshape(tf.where(tf.equal(assignments, c)), [1, -1])), reduction_indices=[1])
+        for c in range(k_num)]
+    means = tf.concat(mean_list, axis=0)
+
+    # 更新中心点
+    update_centroides = tf.assign(centroides, means)
+
+    # 初始化变量
+    init_op = tf.initialize_all_variables()
+
+    # 循环执行次数
+    num_steps = 100
+
+    assignment_values = []
+    # 执行会话
+    sess = tf.Session()
+    sess.run(init_op)
+    for step in range(num_steps):
+        _, centroid_values, assignment_values = sess.run([update_centroides, centroides, assignments])
+
+    # 显示结果
+    data = {"x": [], "y": [], "cluster": []}
+    for i in range(len(assignment_values)):
+        data["x"].append(conjunto_puntos[i][0])
+        data["y"].append(conjunto_puntos[i][1])
+        data["cluster"].append(assignment_values[i])
+    df = pandas.DataFrame(data)
+    seaborn.lmplot("x", "y", data=df, fit_reg=False, height=6, hue="cluster", legend=False)
+    plt.show()
+
+
 if __name__ == "__main__":
-    test_train()
+    # test_train()
     # kmeans_model()
+    kmeans_test()
     pass
