@@ -208,7 +208,7 @@ def calcWs(alphas,dataArr,classLabels):
 
 
 def testRbf(k1=1.3):
-    dataArr,labelArr = loadDataSet('testSetRBF.txt')
+    dataArr,labelArr = loadDataSet('svm_test_set_rbf.txt')
     b,alphas = smoP(dataArr, labelArr, 200, 0.0001, 10000, ('rbf', k1)) #C=200 important
     datMat=mat(dataArr); labelMat = mat(labelArr).transpose()
     svInd=nonzero(alphas.A>0)[0]
