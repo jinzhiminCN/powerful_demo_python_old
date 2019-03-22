@@ -86,6 +86,9 @@ def output_format_test():
     common_logger.info('%10.2s' % 'hello world')
     common_logger.info('%-10.2s' % 'hello world')
 
+    # 使用字典传递真实值
+    common_logger.info("I'm %(name)s. I'm %(age)d year old" % {'name': 'Tom', 'age': 99})
+
 
 if __name__ == "__main__":
     pass
