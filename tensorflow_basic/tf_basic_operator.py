@@ -801,6 +801,7 @@ def test_depthwise_conv2d():
                                [[1], [1], [1], [1]]]],
                        dtype=tf.float32)
     img = tf.concat(values=[img1, img2], axis=3)
+    img_add = tf.add(img1, img2)
 
     # filter
     filter1 = tf.constant(value=0, shape=[3, 3, 1, 1], dtype=tf.float32)
@@ -813,16 +814,17 @@ def test_depthwise_conv2d():
 
     # 一个channel特征和一个filter特征进行卷积，然后相加合成一个新的特征
     conv2d_out_img = tf.nn.conv2d(input=img, filter=filter_all,
-                           strides=[1, 1, 1, 1], padding='VALID')
+                                  strides=[1, 1, 1, 1], padding='VALID')
 
     # 一个channel特征和一个filter特征进行卷积
     depthwise_out_img = tf.nn.depthwise_conv2d(input=img,
-                                           filter=filter_all,
-                                           strides=[1, 1, 1, 1],
-                                           rate=[1, 1],
-                                           padding='VALID')
+                                               filter=filter_all,
+                                               strides=[1, 1, 1, 1],
+                                               rate=[1, 1],
+                                               padding='VALID')
 
     test_run_sess("img", img)
+    test_run_sess("img_add", img_add)
     test_run_sess("filter_out1", filter_out1)
     test_run_sess("filter_out2", filter_out2)
     test_run_sess("filter_all", filter_all)
@@ -932,8 +934,8 @@ if __name__ == "__main__":
     # test_argmax_equal()
     # test_sparse()
     # test_pad()
-    # test_depthwise_conv2d()
+    test_depthwise_conv2d()
     # test_separable_conv2d()
-    test_lrn()
+    # test_lrn()
     pass
 

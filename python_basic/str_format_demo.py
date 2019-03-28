@@ -49,6 +49,12 @@ def str_format_test():
     # with 0x, 0o, or 0b as prefix:
     common_logger.info("int: {0:d};  hex: {0:#x};  oct: {0:#o};  bin: {0:#b}".format(42))
 
+    # split the format function
+    content = "Today {0}"
+    content_format = content.format("Yesterday")
+    common_logger.info(content)
+    common_logger.info(content_format)
+
 
 def output_format_test():
     """
@@ -88,6 +94,12 @@ def output_format_test():
 
     # 使用字典传递真实值
     common_logger.info("I'm %(name)s. I'm %(age)d year old" % {'name': 'Tom', 'age': 99})
+
+    # split the dollar format
+    content = "Today %s"
+    content_format = content % "Yesterday"
+    common_logger.info(content)
+    common_logger.info(content_format)
 
 
 if __name__ == "__main__":
