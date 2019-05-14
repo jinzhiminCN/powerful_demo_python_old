@@ -41,6 +41,13 @@ def test_json_dump():
     for json_item in json_obj1:
         common_logger.info("json obj item value:{0}, type:{1}".format(json_item, str(type(json_item))))
 
+    json_obj2 = {"Monday": "星期一", "Tuesday": "星期二", "Wednesday":"星期三"}
+    json_str = json.dumps(json_obj2)
+    common_logger.info("json str:{0}".format(json_str))
+
+    json_str = json.dumps(json_obj2, ensure_ascii=False)
+    common_logger.info("json str:{0}".format(json_str))
+
 
 def test_json_load():
     """
@@ -95,7 +102,7 @@ def test_json_date_time():
 
 if __name__ == '__main__':
     pass
-    # test_json_dump()
-    test_json_load()
+    test_json_dump()
+    # test_json_load()
     # test_json_date_time()
 
