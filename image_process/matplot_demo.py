@@ -245,6 +245,7 @@ def test_figure_origin_point():
     xx = np.linspace(-0.75, 1., 100)
     ax.plot(xx, xx ** 3)
 
+    plt.savefig("1.png", dpi=600)
     plt.show()
 
 
@@ -333,6 +334,102 @@ def plt_image_test():
     pil_image_demo.plt_images(images, 3, interpolation='nearest')
 
 
+def plot_line_figure1():
+    """
+    https://blog.csdn.net/u012319493/article/details/80609905
+    画折线。
+    :return:
+    """
+    font1 = {
+        'family': 'Times New Roman',
+        'weight': 'normal',
+        'size': 9,
+    }
+
+    x = []
+    y1 = []
+    y2 = []
+    y3 = []
+    y4 = []
+    for i in range(0, 1000):
+        x.append(i)
+        y1.append(random.randint(25, 40))
+        y2.append(random.randint(20, 38))
+        y3.append(random.randint(15, 36))
+        y4.append(random.randint(12, 30))
+
+    plt.figure()
+    plt.plot(x, y1, color='green', label='y1')
+    plt.plot(x, y2, color='red', label='y2')
+    plt.plot(x, y3, color='skyblue', label='y3')
+    plt.plot(x, y4, color='blue', label='y4')
+
+    # 显示图例
+    # plt.legend()
+    # plt.legend(loc='upper right', prop=font1, frameon=False)
+    plt.legend(loc='upper right', prop=font1, frameon=True)
+
+    ax = plt.gca() # 获取到当前坐标轴信息
+    ax.xaxis.set_ticks_position('top') # 将X坐标轴移到上面
+    ax.invert_yaxis() # 反转Y坐标轴
+
+    plt.xlabel('Iterations')
+    plt.ylabel('Avg value')
+    plt.show()
+
+
+def plot_line_figure2():
+    """
+    画折线。
+    :return:
+    """
+    font1 = {
+        'family': 'Times New Roman',
+        'weight': 'normal',
+        'size': 9,
+    }
+
+    fig, ax = plt.subplots()
+
+    x = []
+    y0 = []
+    y1 = []
+    y2 = []
+    y3 = []
+    y4 = []
+    for i in range(0, 1000):
+        x.append(i)
+        y0.append(0)
+        y1.append(random.randint(25, 40))
+        y2.append(random.randint(20, 38))
+        y3.append(random.randint(15, 36))
+        y4.append(random.randint(12, 30))
+
+    ax.plot(x, y0, color='black', linewidth=0)
+    ax.plot(x, y1, color='green', label='y1')
+    ax.plot(x, y2, color='red', label='y2')
+    ax.plot(x, y3, color='skyblue', label='y3')
+    ax.plot(x, y4, color='blue', label='y4')
+
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+
+    ax.xaxis.set_ticks_position('bottom')
+    ax.spines['bottom'].set_position(('data', 0))  # set position of x spine to x=0
+
+    ax.yaxis.set_ticks_position('left')
+    ax.spines['left'].set_position(('data', 0))  # set position of y spine to y=0
+    # 显示图例
+    # plt.legend()
+    # plt.legend(loc='upper right', prop=font1, frameon=False)
+    ax.legend(loc='upper right', prop=font1, frameon=True)
+
+    ax.set_xlabel(r'Iterations', fontsize=9)
+    ax.set_ylabel(r'Avg value', fontsize=9)
+    ax.set_title('title')
+    plt.show()
+
+
 if __name__ == "__main__":
     pass
     # test_figure_xyticks()
@@ -343,5 +440,8 @@ if __name__ == "__main__":
     # test_other_figure()
     # test_polar_axis()
     # test_subplot2grid()
-    plt_image_test()
+    # plt_image_test()
+    # test_plot_line_figure()
+    plot_line_figure1()
+    # plot_line_figure2()
 
