@@ -3,7 +3,7 @@ arsenal==2.1
 asn1crypto==0.24.0
 astor==0.6.2
 beautifulsoup4==4.6.0
-bleach==1.5.0
+bleach==3.3.0
 bottle==0.12.13
 bs4==0.0.1
 certifi==2018.4.16
