@@ -55,7 +55,7 @@ termcolor==1.1.0
 tornado==5.1.1
 torndb==0.3
 torndb-for-python3==0.2.3
-urllib3==1.23
+urllib3==1.26.5
 Werkzeug==0.14.1
 scikit-image==0.14.1
 tqdm==4.28.1
