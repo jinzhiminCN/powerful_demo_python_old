@@ -27,7 +27,7 @@ lxml==4.2.3
 Markdown==2.6.11
 matplotlib==2.2.2
 numpy==1.14.4
-opencv-python==3.4.1.15
+opencv-python==4.2.0.32
 panda==0.3.1
 pandas==0.23.3
 path.py==11.0.1
